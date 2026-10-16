@@ -338,78 +338,78 @@
             `).join('') || `<tr><td colspan="7" class="text-center py-8 text-gray-500">No race results found.</td></tr>`;
         }
 
-        // Live Action Polling & Trigger
-        document.getElementById('refresh-data-btn').addEventListener('click', async () => {
-            let token = localStorage.getItem('github_pat') || prompt('Enter your GitHub Personal Access Token (PAT):');
-            if (!token) return;
-            localStorage.setItem('github_pat', token);
+// Live Action Polling & Trigger (Defaults to Bangkok, Jakarta, Singapore)
+document.getElementById('refresh-data-btn').addEventListener('click', async () => {
+    let token = localStorage.getItem('github_pat') || prompt('Enter your GitHub Personal Access Token (PAT):');
+    if (!token) return;
+    localStorage.setItem('github_pat', token);
 
-            let locInput = prompt('Enter location slugs (e.g. bangkok,jakarta,singapore) or leave blank for ALL:', '');
+    const btn = document.getElementById('refresh-data-btn');
+    const spinner = document.getElementById('spinner-icon');
+    spinner.classList.remove('hidden');
+    btn.childNodes[2].textContent = ' Triggering...';
 
-            const btn = document.getElementById('refresh-data-btn');
-            const spinner = document.getElementById('spinner-icon');
-            spinner.classList.remove('hidden');
-            btn.childNodes[2].textContent = ' Triggering...';
+    try {
+        const res = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/${WORKFLOW_ID}/dispatches`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/vnd.github+json',
+                'Content-Type': 'application/json',
+                'X-GitHub-Api-Version': '2022-11-28'
+            },
+            body: JSON.stringify({ 
+                ref: 'main', 
+                inputs: { locations: 'bangkok,jakarta,singapore' } // Defaults to these three automatically
+            })
+        });
 
+        if (!res.ok) throw new Error('Failed to trigger workflow dispatch.');
+
+        btn.childNodes[2].textContent = ' Scraper Running...';
+        
+        let checkCount = 0;
+        const pollInterval = setInterval(async () => {
+            checkCount++;
             try {
-                const res = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/${WORKFLOW_ID}/dispatches`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Accept': 'application/vnd.github+json',
-                        'Content-Type': 'application/json',
-                        'X-GitHub-Api-Version': '2022-11-28'
-                    },
-                    body: JSON.stringify({ ref: 'main', inputs: { locations: locInput || '' } })
+                const runsRes = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/${WORKFLOW_ID}/runs?per_page=1`, {
+                    headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' }
                 });
+                const runsData = await runsRes.json();
+                if (runsData.workflow_runs && runsData.workflow_runs.length > 0) {
+                    const latestRun = runsData.workflow_runs[0];
+                    const status = latestRun.status; 
+                    const conclusion = latestRun.conclusion; 
 
-                if (!res.ok) throw new Error('Failed to trigger workflow dispatch.');
+                    btn.childNodes[2].textContent = ` Status: ${status}...`;
 
-                btn.childNodes[2].textContent = ' Scraper Running...';
-                
-                // Poll GitHub Actions status every 6 seconds
-                let checkCount = 0;
-                const pollInterval = setInterval(async () => {
-                    checkCount++;
-                    try {
-                        const runsRes = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/${WORKFLOW_ID}/runs?per_page=1`, {
-                            headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' }
-                        });
-                        const runsData = await runsRes.json();
-                        if (runsData.workflow_runs && runsData.workflow_runs.length > 0) {
-                            const latestRun = runsData.workflow_runs[0];
-                            const status = latestRun.status; // queued, in_progress, completed
-                            const conclusion = latestRun.conclusion; // success, failure
-
-                            btn.childNodes[2].textContent = ` Status: ${status}...`;
-
-                            if (status === 'completed') {
-                                clearInterval(pollInterval);
-                                spinner.classList.add('hidden');
-                                if (conclusion === 'success') {
-                                    btn.childNodes[2].textContent = ' Update Complete! Reloading...';
-                                    setTimeout(() => { fetchGitHubData(); btn.childNodes[2].textContent = 'Run Scraper & Update'; }, 3000);
-                                } else {
-                                    btn.childNodes[2].textContent = ' Run Failed';
-                                    alert('Workflow finished with conclusion: ' + conclusion);
-                                }
-                            }
-                        }
-                    } catch (e) { console.warn(e); }
-
-                    if (checkCount > 40) { // Timeout after 4 minutes
+                    if (status === 'completed') {
                         clearInterval(pollInterval);
                         spinner.classList.add('hidden');
-                        btn.childNodes[2].textContent = 'Run Scraper & Update';
+                        if (conclusion === 'success') {
+                            btn.childNodes[2].textContent = ' Update Complete! Reloading...';
+                            setTimeout(() => { fetchGitHubData(); btn.childNodes[2].textContent = 'Run Scraper & Update'; }, 3000);
+                        } else {
+                            btn.childNodes[2].textContent = ' Run Failed';
+                            alert('Workflow finished with conclusion: ' + conclusion);
+                        }
                     }
-                }, 6000);
+                }
+            } catch (e) { console.warn(e); }
 
-            } catch (err) {
+            if (checkCount > 40) { 
+                clearInterval(pollInterval);
                 spinner.classList.add('hidden');
                 btn.childNodes[2].textContent = 'Run Scraper & Update';
-                alert('Error: ' + err.message);
             }
-        });
+        }, 6000);
+
+    } catch (err) {
+        spinner.classList.add('hidden');
+        btn.childNodes[2].textContent = 'Run Scraper & Update';
+        alert('Error: ' + err.message);
+    }
+});
 
         document.querySelectorAll('.sort-header').forEach(th => {
             th.addEventListener('click', () => {
