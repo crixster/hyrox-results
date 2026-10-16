@@ -217,20 +217,30 @@ function parseCSVLine(line) {
     return result;
 }
 
-       async function fetchGitHubData() {
+async function fetchGitHubData() {
     try {
-        const response = await fetch(GITHUB_CSV_URL + '?t=' + new Date().getTime());
-        if (!response.ok) throw new Error('Network response was not ok');
+        // Cache-busting timestamp ensures GitHub doesn't serve old cached CSV
+        const csvUrl = `${GITHUB_CSV_URL}?t=${new Date().getTime()}`;
+        const response = await fetch(csvUrl);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        
         const csvText = await response.text();
         const parsed = parseCSV(csvText);
-        if (parsed.length > 0) {
+        
+        if (parsed && parsed.length > 0) {
             currentDataset = parsed;
+            console.log(`Successfully loaded ${parsed.length} results from results.csv`);
         } else {
-            throw new Error('Parsed CSV is empty');
+            console.warn('results.csv was fetched but appears to be empty.');
         }
     } catch (err) {
-        console.error('Failed to load CSV:', err);
+        console.error('Failed to load results.csv:', err);
     }
+
+    // Populate dynamic location/season/AG filter dropdowns & render table
     initFilters(currentDataset);
     filterAndRender();
 }
