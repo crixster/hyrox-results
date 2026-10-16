@@ -29,15 +29,13 @@
                 <div class="bg-hyrox-500 text-black font-extrabold px-3 py-1.5 rounded text-lg tracking-wider">HYROX</div>
                 <div>
                     <h1 class="text-xl font-bold tracking-tight">Asia Team Relay Men Explorer</h1>
+                    <p class="text-xs text-gray-400">Live data from results.csv &bull; Cloud Automation</p>
                 </div>
             </div>
             <div class="flex flex-wrap items-center gap-3">
                 <button id="refresh-data-btn" class="bg-gray-800 hover:bg-gray-700 text-gray-200 text-sm font-semibold px-4 py-2 rounded-lg transition shadow border border-gray-700 flex items-center gap-2">
-                    <svg class="w-4 h-4 text-hyrox-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                    Reload GitHub CSV
-                </button>
-                <button id="install-btn" class="hidden bg-hyrox-500 hover:bg-hyrox-600 text-black text-sm font-semibold px-4 py-2 rounded-lg transition shadow">
-                    Install PWA
+                    <svg class="w-4 h-4 text-hyrox-500 animate-spin hidden" id="spinner-icon" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    Run Scraper & Update
                 </button>
                 <button id="reset-btn" class="bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm font-medium px-4 py-2 rounded-lg border border-gray-700 transition">
                     Reset Filters
@@ -159,27 +157,24 @@
         Hyrox Asia Team Relay Men PWA &bull; Hosted on GitHub Pages &bull; Offline Ready
     </footer>
 
-    <!-- App Logic & GitHub Integration -->
+    <!-- App Logic -->
     <script>
-        // REPLACE THIS URL with your actual raw GitHub CSV URL e.g.:
-        // https://raw.githubusercontent.com/username/repository/main/hyrox_results.csv
-        const GITHUB_CSV_URL = 'https://raw.githubusercontent.com/crixster/hyrox-results/main/Hyrox_Asia_TeamRelayMen_2526_2627.csv';
+        const GITHUB_CSV_URL = 'https://raw.githubusercontent.com/crixster/hyrox-results/main/results.csv';
+        const GITHUB_OWNER = 'crixster';
+        const GITHUB_REPO = 'hyrox-results';
+        const WORKFLOW_ID = 'update-results.yml';
 
         let currentDataset = [];
         let currentSortColumn = 'OverallRank';
-        let currentSortDirection = 'asc'; // 'asc' or 'desc'
+        let currentSortDirection = 'asc';
 
         const defaultFallbackData = [{"Country":"","Location":"Bangkok","Season":"S7 (24\/25)","Year":2025,"EventDate":"May 24\u201325","EventSlug":"s7-2025-bangkok","OverallRank":1,"AG":"U40","Time":"56:28","GapToWinner":"","Athlete1":"Zaid Rajab","Athlete2":"Moataz Mohi Amer","Athlete3":"Karim Hegazy","Athlete4":"Jonathon Bathurst","TeamCountries":"Jordan; Egypt; United Kingdom"}];
 
-        // Convert time string to seconds for accurate sorting and analytics
         function timeToSeconds(timeStr) {
             if (!timeStr) return 0;
             const parts = timeStr.split(':').map(Number);
-            if (parts.length === 3) {
-                return parts[0] * 3600 + parts[1] * 60 + parts[2];
-            } else if (parts.length === 2) {
-                return parts[0] * 60 + parts[1];
-            }
+            if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+            if (parts.length === 2) return parts[0] * 60 + parts[1];
             return 0;
         }
 
@@ -193,13 +188,11 @@
             return `${mins}:${pad(secs)}`;
         }
 
-        // Robust CSV Parser
         function parseCSV(text) {
             const lines = text.split(/\r\n|\n/);
             if (lines.length < 2) return [];
             const headers = parseCSVLine(lines[0]);
             const results = [];
-
             for (let i = 1; i < lines.length; i++) {
                 if (!lines[i].trim()) continue;
                 const currentLine = parseCSVLine(lines[i]);
@@ -219,9 +212,8 @@
             let startValue = 0;
             let inQuotes = false;
             for (let i = 0; i < line.length; i++) {
-                if (line[i] === '"') {
-                    inQuotes = !inQuotes;
-                } else if (line[i] === ',' && !inQuotes) {
+                if (line[i] === '"') inQuotes = !inQuotes;
+                else if (line[i] === ',' && !inQuotes) {
                     result.push(line.substring(startValue, i).replace(/^"|"$/g, '').replace(/""/g, '"'));
                     startValue = i + 1;
                 }
@@ -230,24 +222,22 @@
             return result;
         }
 
-        // Fetch CSV from GitHub
         async function fetchGitHubData() {
             const badge = document.getElementById('data-source-badge');
             try {
                 badge.textContent = 'Fetching GitHub...';
-                const response = await fetch(GITHUB_CSV_URL + '?t=' + new Date().getTime()); // Cache buster
+                const response = await fetch(GITHUB_CSV_URL + '?t=' + new Date().getTime());
                 if (!response.ok) throw new Error('Network response was not ok');
                 const csvText = await response.text();
                 const parsed = parseCSV(csvText);
                 if (parsed.length > 0) {
                     currentDataset = parsed;
-                    badge.textContent = 'Live (GitHub)';
+                    badge.textContent = 'Live (results.csv)';
                     badge.className = 'ml-2 text-xs bg-emerald-950 text-emerald-400 border border-emerald-800 px-2 py-0.5 rounded';
                 } else {
                     throw new Error('Parsed CSV is empty');
                 }
             } catch (err) {
-                console.warn('Could not fetch from GitHub, using fallback dataset:', err);
                 currentDataset = defaultFallbackData;
                 badge.textContent = 'Fallback Data';
                 badge.className = 'ml-2 text-xs bg-amber-950 text-amber-400 border border-amber-800 px-2 py-0.5 rounded';
@@ -270,31 +260,25 @@
             return Array.from(selectEl.selectedOptions).map(opt => opt.value);
         }
 
-        // Filter, Sort, and Render
         function filterAndRender() {
             const searchQuery = document.getElementById('search-input').value.toLowerCase();
             const selectedLocations = getSelectedValues(document.getElementById('filter-location'));
             const selectedSeasons = getSelectedValues(document.getElementById('filter-season'));
             const selectedAgs = getSelectedValues(document.getElementById('filter-ag'));
 
-            // 1. Filter
             let filtered = currentDataset.filter(item => {
                 const matchSearch = !searchQuery || 
                     [item.Athlete1, item.Athlete2, item.Athlete3, item.Athlete4, item.TeamCountries, item.Location]
                         .some(val => val && val.toLowerCase().includes(searchQuery));
-
                 const matchLoc = selectedLocations.length === 0 || selectedLocations.includes(item.Location);
                 const matchSeason = selectedSeasons.length === 0 || selectedSeasons.includes(item.Season);
                 const matchAg = selectedAgs.length === 0 || selectedAgs.includes(item.AG);
-
                 return matchSearch && matchLoc && matchSeason && matchAg;
             });
 
-            // 2. Sort
             filtered.sort((a, b) => {
                 let valA = a[currentSortColumn];
                 let valB = b[currentSortColumn];
-
                 if (currentSortColumn === 'OverallRank') {
                     valA = Number(valA) || 99999;
                     valB = Number(valB) || 99999;
@@ -305,13 +289,11 @@
                     valA = (valA || '').toString().toLowerCase();
                     valB = (valB || '').toString().toLowerCase();
                 }
-
                 if (valA < valB) return currentSortDirection === 'asc' ? -1 : 1;
                 if (valA > valB) return currentSortDirection === 'asc' ? 1 : -1;
                 return 0;
             });
 
-            // 3. Update KPIs
             const count = filtered.length;
             document.getElementById('kpi-count').textContent = count;
             document.getElementById('table-count').textContent = `Showing ${count} results`;
@@ -319,13 +301,9 @@
             if (count > 0) {
                 const timesInSecs = filtered.map(i => timeToSeconds(i.Time)).filter(t => t > 0);
                 if (timesInSecs.length > 0) {
-                    const minSecs = Math.min(...timesInSecs);
-                    const maxSecs = Math.max(...timesInSecs);
-                    const avgSecs = Math.round(timesInSecs.reduce((a, b) => a + b, 0) / timesInSecs.length);
-
-                    document.getElementById('kpi-fastest').textContent = secondsToTime(minSecs);
-                    document.getElementById('kpi-slowest').textContent = secondsToTime(maxSecs);
-                    document.getElementById('kpi-average').textContent = secondsToTime(avgSecs);
+                    document.getElementById('kpi-fastest').textContent = secondsToTime(Math.min(...timesInSecs));
+                    document.getElementById('kpi-slowest').textContent = secondsToTime(Math.max(...timesInSecs));
+                    document.getElementById('kpi-average').textContent = secondsToTime(Math.round(timesInSecs.reduce((a, b) => a + b, 0) / timesInSecs.length));
                 }
             } else {
                 document.getElementById('kpi-fastest').textContent = '-';
@@ -333,7 +311,6 @@
                 document.getElementById('kpi-average').textContent = '-';
             }
 
-            // 4. Update Header UI Indicators
             document.querySelectorAll('.sort-header').forEach(th => {
                 const indicator = th.querySelector('.sort-indicator');
                 if (th.getAttribute('data-column') === currentSortColumn) {
@@ -345,7 +322,6 @@
                 }
             });
 
-            // 5. Render Table
             const tbody = document.getElementById('results-tbody');
             tbody.innerHTML = filtered.slice(0, 250).map(item => `
                 <tr class="hover:bg-gray-900/50 transition">
@@ -359,24 +335,91 @@
                     </td>
                     <td class="py-3 px-4 text-xs text-gray-400">${item.TeamCountries || '-'}</td>
                 </tr>
-            `).join('') || `<tr><td colspan="7" class="text-center py-8 text-gray-500">No race results found matching your criteria.</td></tr>`;
+            `).join('') || `<tr><td colspan="7" class="text-center py-8 text-gray-500">No race results found.</td></tr>`;
         }
 
-        // Event Listeners for Sorting
+        // Live Action Polling & Trigger
+        document.getElementById('refresh-data-btn').addEventListener('click', async () => {
+            let token = localStorage.getItem('github_pat') || prompt('Enter your GitHub Personal Access Token (PAT):');
+            if (!token) return;
+            localStorage.setItem('github_pat', token);
+
+            let locInput = prompt('Enter location slugs (e.g. bangkok,jakarta,singapore) or leave blank for ALL:', '');
+
+            const btn = document.getElementById('refresh-data-btn');
+            const spinner = document.getElementById('spinner-icon');
+            spinner.classList.remove('hidden');
+            btn.childNodes[2].textContent = ' Triggering...';
+
+            try {
+                const res = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/${WORKFLOW_ID}/dispatches`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/vnd.github+json',
+                        'Content-Type': 'application/json',
+                        'X-GitHub-Api-Version': '2022-11-28'
+                    },
+                    body: JSON.stringify({ ref: 'main', inputs: { locations: locInput || '' } })
+                });
+
+                if (!res.ok) throw new Error('Failed to trigger workflow dispatch.');
+
+                btn.childNodes[2].textContent = ' Scraper Running...';
+                
+                // Poll GitHub Actions status every 6 seconds
+                let checkCount = 0;
+                const pollInterval = setInterval(async () => {
+                    checkCount++;
+                    try {
+                        const runsRes = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/${WORKFLOW_ID}/runs?per_page=1`, {
+                            headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' }
+                        });
+                        const runsData = await runsRes.json();
+                        if (runsData.workflow_runs && runsData.workflow_runs.length > 0) {
+                            const latestRun = runsData.workflow_runs[0];
+                            const status = latestRun.status; // queued, in_progress, completed
+                            const conclusion = latestRun.conclusion; // success, failure
+
+                            btn.childNodes[2].textContent = ` Status: ${status}...`;
+
+                            if (status === 'completed') {
+                                clearInterval(pollInterval);
+                                spinner.classList.add('hidden');
+                                if (conclusion === 'success') {
+                                    btn.childNodes[2].textContent = ' Update Complete! Reloading...';
+                                    setTimeout(() => { fetchGitHubData(); btn.childNodes[2].textContent = 'Run Scraper & Update'; }, 3000);
+                                } else {
+                                    btn.childNodes[2].textContent = ' Run Failed';
+                                    alert('Workflow finished with conclusion: ' + conclusion);
+                                }
+                            }
+                        }
+                    } catch (e) { console.warn(e); }
+
+                    if (checkCount > 40) { // Timeout after 4 minutes
+                        clearInterval(pollInterval);
+                        spinner.classList.add('hidden');
+                        btn.childNodes[2].textContent = 'Run Scraper & Update';
+                    }
+                }, 6000);
+
+            } catch (err) {
+                spinner.classList.add('hidden');
+                btn.childNodes[2].textContent = 'Run Scraper & Update';
+                alert('Error: ' + err.message);
+            }
+        });
+
         document.querySelectorAll('.sort-header').forEach(th => {
             th.addEventListener('click', () => {
                 const column = th.getAttribute('data-column');
-                if (currentSortColumn === column) {
-                    currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
-                } else {
-                    currentSortColumn = column;
-                    currentSortDirection = 'asc';
-                }
+                if (currentSortColumn === column) currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+                else { currentSortColumn = column; currentSortDirection = 'asc'; }
                 filterAndRender();
             });
         });
 
-        // Filter Listeners
         document.getElementById('search-input').addEventListener('input', filterAndRender);
         document.getElementById('filter-location').addEventListener('change', filterAndRender);
         document.getElementById('filter-season').addEventListener('change', filterAndRender);
@@ -392,9 +435,6 @@
             filterAndRender();
         });
 
-        document.getElementById('refresh-data-btn').addEventListener('click', fetchGitHubData);
-
-        // Initial Load
         fetchGitHubData();
     </script>
 </body>
