@@ -29,13 +29,13 @@
                 <div class="bg-hyrox-500 text-black font-extrabold px-3 py-1.5 rounded text-lg tracking-wider">HYROX</div>
                 <div>
                     <h1 class="text-xl font-bold tracking-tight">Asia Team Relay Men Explorer</h1>
-                    <p class="text-xs text-gray-400">Live data from results.csv &bull; Cloud Automation</p>
+                    <p class="text-xs text-gray-400">Live data from results.csv</p>
                 </div>
             </div>
-            <div class="flex flex-wrap items-center gap-3">
+            <div class="flex items-center gap-3">
                 <button id="refresh-data-btn" class="bg-gray-800 hover:bg-gray-700 text-gray-200 text-sm font-semibold px-4 py-2 rounded-lg transition shadow border border-gray-700 flex items-center gap-2">
-                    <svg class="w-4 h-4 text-hyrox-500 animate-spin hidden" id="spinner-icon" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                    Run Scraper & Update
+                    <svg class="w-4 h-4 text-hyrox-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    Reload Data
                 </button>
                 <button id="reset-btn" class="bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm font-medium px-4 py-2 rounded-lg border border-gray-700 transition">
                     Reset Filters
@@ -160,15 +160,10 @@
     <!-- App Logic -->
     <script>
         const GITHUB_CSV_URL = 'https://raw.githubusercontent.com/crixster/hyrox-results/main/results.csv';
-        const GITHUB_OWNER = 'crixster';
-        const GITHUB_REPO = 'hyrox-results';
-        const WORKFLOW_ID = 'update-results.yml';
 
         let currentDataset = [];
         let currentSortColumn = 'OverallRank';
         let currentSortDirection = 'asc';
-
-        const defaultFallbackData = [{"Country":"","Location":"Bangkok","Season":"S7 (24\/25)","Year":2025,"EventDate":"May 24\u201325","EventSlug":"s7-2025-bangkok","OverallRank":1,"AG":"U40","Time":"56:28","GapToWinner":"","Athlete1":"Zaid Rajab","Athlete2":"Moataz Mohi Amer","Athlete3":"Karim Hegazy","Athlete4":"Jonathon Bathurst","TeamCountries":"Jordan; Egypt; United Kingdom"}];
 
         function timeToSeconds(timeStr) {
             if (!timeStr) return 0;
@@ -225,7 +220,7 @@
         async function fetchGitHubData() {
             const badge = document.getElementById('data-source-badge');
             try {
-                badge.textContent = 'Fetching GitHub...';
+                badge.textContent = 'Fetching results.csv...';
                 const response = await fetch(GITHUB_CSV_URL + '?t=' + new Date().getTime());
                 if (!response.ok) throw new Error('Network response was not ok');
                 const csvText = await response.text();
@@ -238,9 +233,8 @@
                     throw new Error('Parsed CSV is empty');
                 }
             } catch (err) {
-                currentDataset = defaultFallbackData;
-                badge.textContent = 'Fallback Data';
-                badge.className = 'ml-2 text-xs bg-amber-950 text-amber-400 border border-amber-800 px-2 py-0.5 rounded';
+                badge.textContent = 'Failed to Load CSV';
+                badge.className = 'ml-2 text-xs bg-rose-950 text-rose-400 border border-rose-800 px-2 py-0.5 rounded';
             }
             initFilters(currentDataset);
             filterAndRender();
@@ -338,78 +332,10 @@
             `).join('') || `<tr><td colspan="7" class="text-center py-8 text-gray-500">No race results found.</td></tr>`;
         }
 
-// Live Action Polling & Trigger (Defaults to Bangkok, Jakarta, Singapore)
-document.getElementById('refresh-data-btn').addEventListener('click', async () => {
-    let token = localStorage.getItem('github_pat') || prompt('Enter your GitHub Personal Access Token (PAT):');
-    if (!token) return;
-    localStorage.setItem('github_pat', token);
-
-    const btn = document.getElementById('refresh-data-btn');
-    const spinner = document.getElementById('spinner-icon');
-    spinner.classList.remove('hidden');
-    btn.childNodes[2].textContent = ' Triggering...';
-
-    try {
-        const res = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/${WORKFLOW_ID}/dispatches`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Accept': 'application/vnd.github+json',
-                'Content-Type': 'application/json',
-                'X-GitHub-Api-Version': '2022-11-28'
-            },
-            body: JSON.stringify({ 
-                ref: 'main', 
-                inputs: { locations: 'bangkok,jakarta,singapore' } // Defaults to these three automatically
-            })
+        // Event Listeners
+        document.getElementById('refresh-data-btn').addEventListener('click', () => {
+            fetchGitHubData();
         });
-
-        if (!res.ok) throw new Error('Failed to trigger workflow dispatch.');
-
-        btn.childNodes[2].textContent = ' Scraper Running...';
-        
-        let checkCount = 0;
-        const pollInterval = setInterval(async () => {
-            checkCount++;
-            try {
-                const runsRes = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/${WORKFLOW_ID}/runs?per_page=1`, {
-                    headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' }
-                });
-                const runsData = await runsRes.json();
-                if (runsData.workflow_runs && runsData.workflow_runs.length > 0) {
-                    const latestRun = runsData.workflow_runs[0];
-                    const status = latestRun.status; 
-                    const conclusion = latestRun.conclusion; 
-
-                    btn.childNodes[2].textContent = ` Status: ${status}...`;
-
-                    if (status === 'completed') {
-                        clearInterval(pollInterval);
-                        spinner.classList.add('hidden');
-                        if (conclusion === 'success') {
-                            btn.childNodes[2].textContent = ' Update Complete! Reloading...';
-                            setTimeout(() => { fetchGitHubData(); btn.childNodes[2].textContent = 'Run Scraper & Update'; }, 3000);
-                        } else {
-                            btn.childNodes[2].textContent = ' Run Failed';
-                            alert('Workflow finished with conclusion: ' + conclusion);
-                        }
-                    }
-                }
-            } catch (e) { console.warn(e); }
-
-            if (checkCount > 40) { 
-                clearInterval(pollInterval);
-                spinner.classList.add('hidden');
-                btn.childNodes[2].textContent = 'Run Scraper & Update';
-            }
-        }, 6000);
-
-    } catch (err) {
-        spinner.classList.add('hidden');
-        btn.childNodes[2].textContent = 'Run Scraper & Update';
-        alert('Error: ' + err.message);
-    }
-});
 
         document.querySelectorAll('.sort-header').forEach(th => {
             th.addEventListener('click', () => {
