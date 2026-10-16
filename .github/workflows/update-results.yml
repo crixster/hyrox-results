@@ -19,7 +19,8 @@ jobs:
       - name: Run Hyrox Scraper Script
         shell: pwsh
         run: |
-          $csvPath = Join-Path $PWD "Hyrox_Asia_TeamRelayMen_2526_2627.csv"
+          # Output directly to results.csv
+          $csvPath = Join-Path $PWD "results.csv"
           $targetLocations = "${{ inputs.locations }}"
           
           if (-not [string]::IsNullOrWhiteSpace($targetLocations)) {
@@ -33,5 +34,5 @@ jobs:
       - name: Commit and Push Changes
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "Auto-update Hyrox race results via GitHub Actions"
-          file_pattern: "Hyrox_Asia_TeamRelayMen_2526_2627.csv"
+          commit_message: "Auto-update Hyrox race results to results.csv via GitHub Actions"
+          file_pattern: "results.csv"
