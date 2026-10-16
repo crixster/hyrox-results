@@ -1,0 +1,39 @@
+name: Run Hyrox Scraper & Update CSV
+
+on:
+  workflow_dispatch:
+    inputs:
+      locations: 'bangkok,jakarta,singapore'
+        description: 'Optional: Location slugs separated by commas (e.g. bangkok,jakarta,singapore). Leave blank for all.'
+        required: false
+        default: ''
+        type: string
+
+jobs:
+  run-script:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Run Hyrox Scraper Script
+        shell: pwsh
+        run: |
+          $csvPath = Join-Path $PWD "Hyrox_Asia_TeamRelayMen_2526_2627.csv"
+          
+          # Check if custom locations were provided in the workflow dispatch input
+          $targetLocations = "${{ inputs.locations }}"
+          
+          if (-not [string]::IsNullOrWhiteSpace($targetLocations)) {
+              Write-Host "Running script for specific locations: $targetLocations"
+              ./Get-HyroxAsiaRelayMen.ps1 -OutFile $csvPath -Only $targetLocations.Split(',')
+          } else {
+              Write-Host "Running script for all Asian locations..."
+              ./Get-HyroxAsiaRelayMen.ps1 -OutFile $csvPath
+          }
+
+      - name: Commit and Push Changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Auto-update Hyrox race results via GitHub Actions workflow dispatch"
+          file_pattern: "Hyrox_Asia_TeamRelayMen_2526_2627.csv"
