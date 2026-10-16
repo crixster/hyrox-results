@@ -3,46 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hyrox Asia Team Relay Men - Filter & Analytics PWA</title>
+    <title>Hyrox Asia Team Relay Men - Filter & Analytics</title>
     <meta name="theme-color" content="#ff6600">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-192.png">
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        hyrox: { 500: '#ff6600', 600: '#e65c00', 900: '#1a1a1a' }
-                    }
+<script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    hyrox: { 500: '#facc15', 600: '#eab308', 900: '#1a1a1a' } // Yellow theme
                 }
             }
         }
-    </script>
+    }
+</script>
 </head>
 <body class="bg-gray-950 text-gray-100 min-h-screen font-sans antialiased">
-    <!-- Header -->
-    <header class="bg-gray-900 border-b border-gray-800 sticky top-0 z-30 shadow-md">
-        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
-            <div class="flex items-center space-x-3">
-                <div class="bg-hyrox-500 text-black font-extrabold px-3 py-1.5 rounded text-lg tracking-wider">HYROX</div>
-                <div>
-                    <h1 class="text-xl font-bold tracking-tight">Asia Team Relay Men Explorer</h1>
-                    <p class="text-xs text-gray-400">Live data from results.csv</p>
-                </div>
-            </div>
-            <div class="flex items-center gap-3">
-                <button id="refresh-data-btn" class="bg-gray-800 hover:bg-gray-700 text-gray-200 text-sm font-semibold px-4 py-2 rounded-lg transition shadow border border-gray-700 flex items-center gap-2">
-                    <svg class="w-4 h-4 text-hyrox-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                    Reload Data
-                </button>
-                <button id="reset-btn" class="bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm font-medium px-4 py-2 rounded-lg border border-gray-700 transition">
-                    Reset Filters
-                </button>
+<!-- Header -->
+<header class="bg-gray-900 border-b border-gray-800 sticky top-0 z-30 shadow-md">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div class="flex items-center space-x-3">
+            <div class="bg-yellow-400 text-black font-extrabold px-3 py-1.5 rounded text-lg tracking-wider">HYROX</div>
+            <div>
+                <h1 class="text-xl font-bold tracking-tight">Asia Team Relay Men Explorer</h1>
             </div>
         </div>
-    </header>
+        <div class="flex items-center gap-3">
+            <button id="reset-btn" class="bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm font-medium px-4 py-2 rounded-lg border border-gray-700 transition">
+                Reset Filters
+            </button>
+        </div>
+    </div>
+</header>
 
     <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
         <!-- KPI Cards -->
@@ -116,10 +111,10 @@
 
         <!-- Data Table -->
         <div class="bg-gray-900 border border-gray-800 rounded-xl shadow-sm overflow-hidden">
-            <div class="p-4 border-b border-gray-800 flex justify-between items-center">
-                <h3 class="font-semibold text-sm">Race Results <span id="data-source-badge" class="ml-2 text-xs bg-gray-800 text-gray-400 px-2 py-0.5 rounded">Loading...</span></h3>
-                <span id="table-count" class="text-xs text-gray-400">Showing 0 results</span>
-            </div>
+    <div class="p-4 border-b border-gray-800 flex justify-between items-center">
+    <h3 class="font-semibold text-sm">Race Results</h3>
+    <span id="table-count" class="text-xs text-gray-400">Showing 0 results</span>
+</div>
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse text-sm">
                     <thead>
@@ -222,28 +217,23 @@ function parseCSVLine(line) {
     return result;
 }
 
-        async function fetchGitHubData() {
-            const badge = document.getElementById('data-source-badge');
-            try {
-                badge.textContent = 'Fetching results.csv...';
-                const response = await fetch(GITHUB_CSV_URL + '?t=' + new Date().getTime());
-                if (!response.ok) throw new Error('Network response was not ok');
-                const csvText = await response.text();
-                const parsed = parseCSV(csvText);
-                if (parsed.length > 0) {
-                    currentDataset = parsed;
-                    badge.textContent = 'Live (results.csv)';
-                    badge.className = 'ml-2 text-xs bg-emerald-950 text-emerald-400 border border-emerald-800 px-2 py-0.5 rounded';
-                } else {
-                    throw new Error('Parsed CSV is empty');
-                }
-            } catch (err) {
-                badge.textContent = 'Failed to Load CSV';
-                badge.className = 'ml-2 text-xs bg-rose-950 text-rose-400 border border-rose-800 px-2 py-0.5 rounded';
-            }
-            initFilters(currentDataset);
-            filterAndRender();
+       async function fetchGitHubData() {
+    try {
+        const response = await fetch(GITHUB_CSV_URL + '?t=' + new Date().getTime());
+        if (!response.ok) throw new Error('Network response was not ok');
+        const csvText = await response.text();
+        const parsed = parseCSV(csvText);
+        if (parsed.length > 0) {
+            currentDataset = parsed;
+        } else {
+            throw new Error('Parsed CSV is empty');
         }
+    } catch (err) {
+        console.error('Failed to load CSV:', err);
+    }
+    initFilters(currentDataset);
+    filterAndRender();
+}
 
         function initFilters(data) {
             const locations = [...new Set(data.map(item => item.Location))].filter(Boolean).sort();
