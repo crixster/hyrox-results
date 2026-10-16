@@ -337,10 +337,7 @@ async function fetchGitHubData() {
             `).join('') || `<tr><td colspan="7" class="text-center py-8 text-gray-500">No race results found.</td></tr>`;
         }
 
-        // Event Listeners
-        document.getElementById('refresh-data-btn').addEventListener('click', () => {
-            fetchGitHubData();
-        });
+    
 
         document.querySelectorAll('.sort-header').forEach(th => {
             th.addEventListener('click', () => {
