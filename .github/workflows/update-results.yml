@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       locations:
-        description: 'Optional: Location slugs separated by commas (e.g. bangkok,jakarta,singapore). Leave blank for all.'
+        description: 'Location slugs separated by commas. Default is set to Bangkok, Jakarta, and Singapore.'
         required: false
         default: 'bangkok,jakarta,singapore'
         type: string
@@ -19,7 +19,6 @@ jobs:
       - name: Run Hyrox Scraper Script
         shell: pwsh
         run: |
-          # Output directly to results.csv
           $csvPath = Join-Path $PWD "results.csv"
           $targetLocations = "${{ inputs.locations }}"
           
@@ -34,5 +33,5 @@ jobs:
       - name: Commit and Push Changes
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "Auto-update Hyrox race results to results.csv via GitHub Actions"
+          commit_message: "Auto-update Hyrox race results for Bangkok, Jakarta, Singapore"
           file_pattern: "results.csv"
