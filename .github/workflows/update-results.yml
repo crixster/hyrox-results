@@ -6,7 +6,7 @@ on:
       locations:
         description: 'Optional: Location slugs separated by commas (e.g. bangkok,jakarta,singapore). Leave blank for all.'
         required: false
-        default: ''
+        default: 'bangkok,jakarta,singapore'
         type: string
 
 jobs:
