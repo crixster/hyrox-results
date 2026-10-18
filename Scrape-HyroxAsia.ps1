@@ -7,7 +7,8 @@ param(
     [string[]]$Only = @(),
     [int[]]$Seasons = @(8, 9),
     [string[]]$AcceptedSeasonYears = @('7-2025'),
-    [int]$DelayMs = 400,
+    [int]$DelayMs = 2000,           # base pause after every request (random jitter of up to +50% is added)
+    [int]$EventPauseSec = 5,        # extra pause after each event that was scraped
     [switch]$PlainTimes,
     [switch]$SkipAG,                # no longer used (age groups come from the ranking pages); kept so old commands still work
     [switch]$Only40Plus
@@ -33,16 +34,41 @@ $categoriesToRun = if ($Category -eq 'All') {
     @($Category)
 }
 
+$script:abort = $false
+$script:blockedStreak = 0
+
 function Get-Html([string]$url) {
-    for ($try = 1; $try -le 3; $try++) {
+    if ($script:abort) { return $null }
+    for ($try = 1; $try -le 4; $try++) {
         try {
             $r = Invoke-WebRequest -Uri $url -UseBasicParsing -TimeoutSec 30 `
                  -Headers @{ "User-Agent" = "Mozilla/5.0 (personal research script)" }
-            Start-Sleep -Milliseconds $DelayMs
+            $script:blockedStreak = 0
+            # base delay + random jitter so requests are not perfectly regular
+            $jitter = Get-Random -Minimum 0 -Maximum ([Math]::Max(1, [int]($DelayMs / 2)))
+            Start-Sleep -Milliseconds ($DelayMs + $jitter)
             return [string]$r.Content
         } catch {
-            Write-Warning "  attempt $try failed for $url : $($_.Exception.Message)"
-            Start-Sleep -Seconds (2 * $try)
+            $status = 0
+            if ($_.Exception.Response) { try { $status = [int]$_.Exception.Response.StatusCode } catch {} }
+
+            # Page does not exist (e.g. past the last ranking page): retrying will not help
+            if ($status -eq 404) { return $null }
+
+            if ($status -in 403, 429, 503) {
+                $script:blockedStreak++
+                if ($script:blockedStreak -ge 5) {
+                    $script:abort = $true
+                    Write-Warning "The server keeps answering HTTP $status. This looks like rate limiting or an IP block. Stopping and saving what was collected so far. Wait a few hours before running again."
+                    return $null
+                }
+                $wait = 30 * $try
+                Write-Warning "  HTTP $status (rate limited?) for $url - waiting $wait s before retrying"
+                Start-Sleep -Seconds $wait
+            } else {
+                Write-Warning "  attempt $try failed for $url : $($_.Exception.Message)"
+                Start-Sleep -Seconds (2 * $try)
+            }
         }
     }
     return $null
@@ -194,6 +220,7 @@ foreach ($cat in $categoriesToRun) {
     $textInfo    = (Get-Culture).TextInfo
 
     foreach ($e in $events) {
+        if ($script:abort) { Write-Warning "Stopping early (rate limited). Remaining events skipped."; break }
         $sm = [regex]::Match($e.EventSlug, '^s(\d+)-(\d{4})-')
         $seasonOk = $false
         if ($sm.Success) {
@@ -341,6 +368,7 @@ foreach ($cat in $categoriesToRun) {
         $outcome = if ($entriesThisEvent -gt 0) { "scraped" } else { "no results" }
         Write-Host ("  {0,-8} {1,-28} {2} entries" -f $outcome.Substring(0, [Math]::Min(8, $outcome.Length)), $e.EventSlug, $entriesThisEvent)
         $log.Add([pscustomobject]@{ Event = $e.EventSlug; Outcome = $outcome; Entries = $entriesThisEvent })
+        if ($entriesThisEvent -gt 0 -and $EventPauseSec -gt 0 -and -not $script:abort) { Start-Sleep -Seconds $EventPauseSec }
     }
 
     if ($isRelay) {
@@ -355,10 +383,11 @@ foreach ($cat in $categoriesToRun) {
     Export-PlainCsv $log @('Event','Outcome','Entries') $logFile
     Write-Host "Completed $cat -> saved to $OutFile"
     $written.Add($OutFile)
+    if ($script:abort) { Write-Warning "Stopped early because of rate limiting; remaining categories were skipped."; break }
 }
 
 Write-Host ""
-Write-Host "All requested categories successfully completed!"
+if ($script:abort) { Write-Warning "Run stopped early. The CSVs contain only what was collected before the block." } else { Write-Host "All requested categories successfully completed!" }
 Write-Host ""
 Write-Host "Result files (upload these to the PWA repo):"
 foreach ($f in $written) { Write-Host "  $f" }
