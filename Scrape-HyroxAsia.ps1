@@ -297,9 +297,10 @@ foreach ($cat in $categoriesToRun) {
                 $time  = if ($timeM.Success) { $timeM.Groups[1].Value } else { "" }
                 $diff  = if ($diffM.Success) { $diffM.Groups[1].Value } else { "" }
 
-                # Age group badge shown on the row, e.g. 16-24, 25-29, 40-44 or 80+
-                $agM = [regex]::Match($text, '(?<![\d:+])(\d{2}\s*-\s*\d{2}|\d{2}\+)(?![\d:])')
-                $ag  = if ($agM.Success) { $agM.Groups[1].Value -replace '\s', '' } else { "" }
+                # Age group badge shown on the row, e.g. 16-24, 25-29, 40-44, 80+ (solo)
+                # or U40 / 40+ (team relay)
+                $agM = [regex]::Match($text, '(?<![\d:+])(\d{2}\s*-\s*\d{2}|\d{2}\+|\bU(?:nder)?\s*\d{2})(?![\d:])')
+                $ag  = if ($agM.Success) { ($agM.Groups[1].Value -replace '\s', '') -replace '^Under', 'U' } else { "" }
 
                 $overall = ""
                 if ($time) { $rank++; $overall = $rank }
@@ -360,8 +361,8 @@ foreach ($cat in $categoriesToRun) {
             $withAg = 0
             for ($i = $firstRow; $i -lt $rows.Count; $i++) { if ($rows[$i].AG) { $withAg++ } }
             Write-Host "    age group found for $withAg of $entriesThisEvent rows"
-            if ($withAg -eq 0) {
-                Write-Warning "  no age group badges found in the page HTML for $($e.EventSlug)"
+            if ($withAg -lt $entriesThisEvent) {
+                Write-Warning "  $($entriesThisEvent - $withAg) of $entriesThisEvent rows have no age group for $($e.EventSlug) (check the badge text in the page HTML)"
             }
         }
 
