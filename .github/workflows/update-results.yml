@@ -20,11 +20,6 @@ on:
         required: false
         default: 'bangkok,jakarta,singapore'
         type: string
-      skip_ag:
-        description: 'Skip the 40+ age group lookup (much faster, AG column stays empty)'
-        required: false
-        default: false
-        type: boolean
 
 # Needed so the commit step can push the updated CSVs back to the repo
 permissions:
@@ -42,7 +37,6 @@ jobs:
         env:
           CATEGORY: ${{ inputs.category }}
           LOCATIONS: ${{ inputs.locations }}
-          SKIP_AG: ${{ inputs.skip_ag }}
         run: |
           # CSVs are written to the repo root, next to index.html
           $params = @{ Category = $env:CATEGORY; OutDir = $PWD.Path }
@@ -53,8 +47,6 @@ jobs:
           } else {
               Write-Host "Running $($env:CATEGORY) for all Asian locations..."
           }
-
-          if ($env:SKIP_AG -eq 'true') { $params.SkipAG = $true }
 
           ./Scrape-HyroxAsia.ps1 @params
 
