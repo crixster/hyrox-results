@@ -95,37 +95,58 @@ function Export-PlainCsv($objects, [string[]]$columns, [string]$path) {
 
 # ---------------------------------------------------------------
 Write-Host "Step 1: discovering Asian locations..."
-$locHtml = Get-Html "$root/locations?con=AS"
+
+# NOTE: the Region filter on hyresult runs in the browser - "?con=AS" is ignored, so this page
+# always lists every location worldwide. Also, only a few of the location cards are real
+# <a href> links, so scraping links alone finds just a handful (it used to find only
+# Jakarta, Bangkok and Singapore). So we combine three sources:
+#   (a) the cards themselves: <h2>Name</h2> followed by "Country, Asia"
+#   (b) any /location/ links that belong to an Asian city
+#   (c) the built-in list below (a wrong guess is just a 404 in Step 2 and is skipped)
+$locHtml = Get-Html "$root/locations"
 if (-not $locHtml) { throw "Could not load the locations page." }
-
-$locations = [ordered]@{}
-$hits = [regex]::Matches($locHtml, 'href="' + $hostRx + '/location/([A-Za-z0-9_-]+)"')
-$usedFallback = $false
-if ($hits.Count -eq 0) {
-    $hits = [regex]::Matches($locHtml, '\\?/location\\?/([A-Za-z0-9_-]+)')
-    $usedFallback = $true
-}
-
-foreach ($h in $hits) {
-    $slug = $h.Groups[1].Value
-    if (-not $locations.Contains($slug)) { $locations[$slug] = "" }
-}
 
 $asiaNames = @('Greater Noida','Mumbai','Osaka','Yokohama','Sanya','Seoul','Sharjah','Singapore','Wuhan',
                'Doha','Nagoya','Dubai','Guangzhou','Shanghai','Jakarta','Shenzhen','Taipei','Gandhinagar',
                'Gujarat','Chengdu','Hangzhou','Hong Kong','Bengaluru','New Delhi','Chiba','Incheon','Bangkok',
-               'Kuala Lumpur','Abu Dhabi','Beijing')
+               'Kuala Lumpur','Abu Dhabi','Beijing','Hanoi')
 $asiaSlugs = $asiaNames | ForEach-Object { ($_.ToLower() -replace '[^a-z0-9]+', '-').Trim('-') }
 
-if ($locations.Count -gt 45 -or $usedFallback) {
-    $filtered = [ordered]@{}
-    foreach ($slug in @($locations.Keys)) {
-        foreach ($a in $asiaSlugs) {
-            if ($slug -eq $a -or $slug.StartsWith($a + "-")) { $filtered[$slug] = ""; break }
-        }
+$locations = [ordered]@{}
+
+# (a) location cards
+$fromCards = 0
+foreach ($hm in [regex]::Matches($locHtml, '<h2\b[^>]*>(.*?)</h2>', 'Singleline')) {
+    $name = Strip-Tags $hm.Groups[1].Value
+    if (-not $name) { continue }
+    $tailStart = $hm.Index + $hm.Length
+    $tail = Strip-Tags $locHtml.Substring($tailStart, [Math]::Min(400, $locHtml.Length - $tailStart))
+    if ($tail -match '^[^,]{1,60},\s*Asia\b') {
+        $slug = ($name.ToLower() -replace '[^a-z0-9]+', '-').Trim('-')
+        if ($slug -and -not $locations.Contains($slug)) { $locations[$slug] = ""; $fromCards++ }
     }
-    $locations = $filtered
 }
+
+# (b) plain links, keeping only Asian cities
+$linkHits = [regex]::Matches($locHtml, 'href="' + $hostRx + '/location/([A-Za-z0-9_-]+)"')
+if ($linkHits.Count -eq 0) {
+    $linkHits = [regex]::Matches($locHtml, '\\?/location\\?/([A-Za-z0-9_-]+)')
+}
+$fromLinks = 0
+foreach ($h in $linkHits) {
+    $slug = $h.Groups[1].Value
+    if ($locations.Contains($slug)) { continue }
+    foreach ($a in $asiaSlugs) {
+        if ($slug -eq $a -or $slug.StartsWith($a + "-")) { $locations[$slug] = ""; $fromLinks++; break }
+    }
+}
+
+# (c) built-in list
+$fromList = 0
+foreach ($a in $asiaSlugs) {
+    if (-not $locations.Contains($a)) { $locations[$a] = ""; $fromList++ }
+}
+Write-Host "  sources: $fromCards from page cards, $fromLinks from links, $fromList from built-in list"
 
 if ($Only -and $Only.Count -gt 0) {
     $keep = [ordered]@{}
