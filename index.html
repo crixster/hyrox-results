@@ -24,106 +24,116 @@
 <body class="bg-gray-950 text-gray-100 min-h-screen font-sans antialiased">
 <!-- Header -->
 <header class="bg-gray-900 border-b border-gray-800 sticky top-0 z-30 shadow-md">
-    <div class="max-w-7xl mx-auto px-4 pt-4 flex flex-col sm:flex-row justify-between items-center gap-4">
-        <div class="flex items-center space-x-3">
-            <div class="bg-yellow-400 text-black font-extrabold px-3 py-1.5 rounded text-lg tracking-wider">HYROX</div>
-            <div>
-                <h1 class="text-xl font-bold tracking-tight">Asia Results Explorer</h1>
-                <p id="page-subtitle" class="text-xs text-gray-400"></p>
+    <div class="max-w-7xl mx-auto px-4 py-3 sm:py-4 flex flex-col sm:flex-row justify-between items-center gap-3">
+        <div class="flex items-center justify-between w-full sm:w-auto">
+            <div class="flex items-center space-x-3">
+                <div class="bg-yellow-400 text-black font-extrabold px-3 py-1.5 rounded text-base sm:text-lg tracking-wider">HYROX</div>
+                <div>
+                    <h1 class="text-lg sm:text-xl font-bold tracking-tight">Asia Results</h1>
+                    <p id="page-subtitle" class="text-xs text-gray-400"></p>
+                </div>
             </div>
+            <!-- Mobile Filter Toggle Button -->
+            <button id="mobile-filter-toggle" class="sm:hidden bg-gray-800 hover:bg-gray-700 text-hyrox-500 p-2 rounded-lg border border-gray-700 flex items-center gap-1.5 text-xs font-semibold">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+                Filters
+            </button>
         </div>
-        <div class="flex items-center gap-3">
+        <div class="hidden sm:flex items-center gap-3">
             <button id="reset-btn" class="bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm font-medium px-4 py-2 rounded-lg border border-gray-700 transition">
                 Reset Filters
             </button>
         </div>
     </div>
     <!-- Category pages (built by JS) -->
-    <nav id="category-nav" class="max-w-7xl mx-auto px-4 mt-3 flex gap-1 overflow-x-auto" aria-label="Categories"></nav>
+    <nav id="category-nav" class="max-w-7xl mx-auto px-4 py-2 flex gap-2 overflow-x-auto scrollbar-none" aria-label="Categories"></nav>
 </header>
 
-    <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
+    <main class="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
         <!-- Loading / error message -->
         <div id="status" class="hidden bg-gray-900 border border-gray-800 rounded-xl p-6 text-sm text-gray-300"></div>
 
-        <div id="content" class="space-y-6">
+        <div id="content" class="space-y-4 sm:space-y-6">
         <!-- KPI Cards -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-sm flex items-center justify-between">
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <div class="bg-gray-900 border border-gray-800 rounded-xl p-3.5 sm:p-5 shadow-sm flex items-center justify-between">
                 <div>
-                    <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Filtered Results</p>
-                    <p id="kpi-count" class="text-2xl font-bold mt-1 text-white">0</p>
+                    <p class="text-[10px] sm:text-xs font-medium text-gray-400 uppercase tracking-wider">Filtered Results</p>
+                    <p id="kpi-count" class="text-xl sm:text-2xl font-bold mt-1 text-white">0</p>
                 </div>
-                <div class="p-3 bg-gray-800 text-hyrox-500 rounded-lg">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                <div class="p-2.5 sm:p-3 bg-gray-800 text-hyrox-500 rounded-lg">
+                    <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                 </div>
             </div>
-            <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-sm flex items-center justify-between">
+            <div class="bg-gray-900 border border-gray-800 rounded-xl p-3.5 sm:p-5 shadow-sm flex items-center justify-between">
                 <div>
-                    <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Fastest Time</p>
-                    <p id="kpi-fastest" class="text-2xl font-bold mt-1 text-emerald-400">-</p>
+                    <p class="text-[10px] sm:text-xs font-medium text-gray-400 uppercase tracking-wider">Fastest Time</p>
+                    <p id="kpi-fastest" class="text-xl sm:text-2xl font-bold mt-1 text-emerald-400">-</p>
                 </div>
-                <div class="p-3 bg-gray-800 text-emerald-400 rounded-lg">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                <div class="p-2.5 sm:p-3 bg-gray-800 text-emerald-400 rounded-lg">
+                    <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                 </div>
             </div>
-            <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-sm flex items-center justify-between">
+            <div class="bg-gray-900 border border-gray-800 rounded-xl p-3.5 sm:p-5 shadow-sm flex items-center justify-between">
                 <div>
-                    <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Slowest Time</p>
-                    <p id="kpi-slowest" class="text-2xl font-bold mt-1 text-rose-400">-</p>
+                    <p class="text-[10px] sm:text-xs font-medium text-gray-400 uppercase tracking-wider">Slowest Time</p>
+                    <p id="kpi-slowest" class="text-xl sm:text-2xl font-bold mt-1 text-rose-400">-</p>
                 </div>
-                <div class="p-3 bg-gray-800 text-rose-400 rounded-lg">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <div class="p-2.5 sm:p-3 bg-gray-800 text-rose-400 rounded-lg">
+                    <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                 </div>
             </div>
-            <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-sm flex items-center justify-between">
+            <div class="bg-gray-900 border border-gray-800 rounded-xl p-3.5 sm:p-5 shadow-sm flex items-center justify-between">
                 <div>
-                    <p class="text-xs font-medium text-gray-400 uppercase tracking-wider">Average Time</p>
-                    <p id="kpi-average" class="text-2xl font-bold mt-1 text-hyrox-500">-</p>
+                    <p class="text-[10px] sm:text-xs font-medium text-gray-400 uppercase tracking-wider">Average Time</p>
+                    <p id="kpi-average" class="text-xl sm:text-2xl font-bold mt-1 text-hyrox-500">-</p>
                 </div>
-                <div class="p-3 bg-gray-800 text-hyrox-500 rounded-lg">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                <div class="p-2.5 sm:p-3 bg-gray-800 text-hyrox-500 rounded-lg">
+                    <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
                 </div>
             </div>
         </div>
 
         <!-- Filters Section -->
-        <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-sm space-y-4">
+        <div id="filters-container" class="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-5 shadow-sm space-y-4 hidden sm:block">
             <div class="flex justify-between items-center">
                 <h2 class="text-sm font-semibold uppercase tracking-wider text-gray-400">Multi-Filter Controls</h2>
-                <span class="text-xs text-gray-500">Hold Ctrl / Cmd to select multiple items</span>
+                <button id="mobile-reset-btn" class="sm:hidden text-xs text-hyrox-500 font-medium">Reset All</button>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
                     <label id="search-label" class="block text-xs font-medium text-gray-400 mb-1">Search</label>
-                    <input type="text" id="search-input" placeholder="e.g. Zaid, Singapore..." class="w-full bg-gray-950 border border-gray-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-hyrox-500">
+                    <input type="text" id="search-input" placeholder="e.g. Zaid, Singapore..." class="w-full bg-gray-950 border border-gray-800 rounded-lg px-3 py-2.5 sm:py-2 text-sm text-white focus:outline-none focus:border-hyrox-500">
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-gray-400 mb-1">Location (Multi-select)</label>
-                    <select id="filter-location" multiple class="w-full h-24 bg-gray-950 border border-gray-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-hyrox-500">
-                    </select>
+                    <div id="filter-location-chips" class="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto p-2 bg-gray-950 border border-gray-800 rounded-lg"></div>
+                    <select id="filter-location" multiple class="hidden"></select>
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-gray-400 mb-1">Season (Multi-select)</label>
-                    <select id="filter-season" multiple class="w-full h-24 bg-gray-950 border border-gray-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-hyrox-500">
-                    </select>
+                    <div id="filter-season-chips" class="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto p-2 bg-gray-950 border border-gray-800 rounded-lg"></div>
+                    <select id="filter-season" multiple class="hidden"></select>
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-gray-400 mb-1">Age Group (AG) (Multi-select)</label>
-                    <select id="filter-ag" multiple class="w-full h-24 bg-gray-950 border border-gray-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-hyrox-500">
-                    </select>
+                    <div id="filter-ag-chips" class="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto p-2 bg-gray-950 border border-gray-800 rounded-lg"></div>
+                    <select id="filter-ag" multiple class="hidden"></select>
                 </div>
+            </div>
+            <div class="flex justify-end pt-2 sm:hidden">
+                <button id="apply-filters-btn" class="w-full bg-yellow-400 text-black font-bold py-2.5 rounded-lg text-sm">Apply Filters</button>
             </div>
         </div>
 
         <!-- Data Table -->
         <div class="bg-gray-900 border border-gray-800 rounded-xl shadow-sm overflow-hidden">
-            <div class="p-4 border-b border-gray-800 flex justify-between items-center">
+            <div class="p-3 sm:p-4 border-b border-gray-800 flex justify-between items-center">
                 <h3 id="table-title" class="font-semibold text-sm">Race Results</h3>
                 <span id="table-count" class="text-xs text-gray-400">Showing 0 results</span>
             </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse text-sm">
+            <div class="overflow-x-auto relative">
+                <table class="w-full text-left border-collapse text-xs sm:text-sm whitespace-nowrap">
                     <thead id="results-thead"></thead>
                     <tbody id="results-tbody" class="divide-y divide-gray-800 text-gray-300">
                         <!-- Populated by JS -->
@@ -131,7 +141,7 @@
                 </table>
             </div>
             <div id="show-more-wrap" class="hidden p-4 border-t border-gray-800 text-center">
-                <button id="show-more-btn" class="bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm font-medium px-4 py-2 rounded-lg border border-gray-700 transition">
+                <button id="show-more-btn" class="bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm font-medium px-4 py-2.5 rounded-lg border border-gray-700 transition w-full sm:w-auto">
                     Show more
                 </button>
             </div>
@@ -139,7 +149,7 @@
         </div>
     </main>
 
-    <footer class="text-center py-6 text-xs text-gray-500">
+    <footer class="text-center py-6 text-xs text-gray-500 px-4">
         Hyrox Asia Results PWA &bull; Hosted on GitHub Pages &bull; Offline Ready
     </footer>
 
@@ -155,12 +165,10 @@
             { key: 'women',      label: 'Women',            file: 'Hyrox_Asia_Women.csv',           relay: false },
             { key: 'men',        label: 'Men',              file: 'Hyrox_Asia_Men.csv',             relay: false },
             { key: 'promen',     label: 'Pro Men',          file: 'Hyrox_Asia_ProMen.csv',          relay: false },
-            // fallback: the old single-file name, so the existing results.csv keeps working
             { key: 'relaymen',   label: 'Team Relay Men',   file: 'Hyrox_Asia_TeamRelayMen.csv',    relay: true, fallback: 'results.csv' },
             { key: 'relaymixed', label: 'Team Relay Mixed', file: 'Hyrox_Asia_TeamRelayMixed.csv',  relay: true }
         ];
 
-        // Table columns. sortKey = column used when the header is clicked (omit = not sortable)
         const COLUMNS_SOLO = [
             { label: 'Rank',     sortKey: 'OverallRank' },
             { label: 'Location', sortKey: 'Location' },
@@ -180,20 +188,14 @@
             { label: 'Team Countries', sortKey: 'TeamCountries' }
         ];
 
-        // ---------------------------------------------------------------
-        // State
-        // ---------------------------------------------------------------
-        const datasets = {};          // category key -> parsed rows (loaded once per visit)
+        const datasets = {};
         let currentCategory = null;
         let currentDataset = [];
         let currentSortColumn = 'OverallRank';
         let currentSortDirection = 'asc';
         let visibleLimit = PAGE_SIZE;
-        let loadToken = 0;            // guards against slow loads finishing after the user switched pages
+        let loadToken = 0;
 
-        // ---------------------------------------------------------------
-        // Helpers
-        // ---------------------------------------------------------------
         function escapeHtml(str) {
             return String(str ?? '').replace(/[&<>"']/g, c => (
                 { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
@@ -243,9 +245,7 @@
             const result = [];
             let startValue = 0;
             let inQuotes = false;
-            const clean = (v) => v.trim()
-                // Strip Excel formula wrapper ="" and surrounding quotes
-                .replace(/^=\s*"/, '').replace(/^"|"$/g, '').replace(/""/g, '"').trim();
+            const clean = (v) => v.trim().replace(/^=\s*"/, '').replace(/^"|"$/g, '').replace(/""/g, '"').trim();
             for (let i = 0; i < line.length; i++) {
                 if (line[i] === '"') inQuotes = !inQuotes;
                 else if (line[i] === ',' && !inQuotes) {
@@ -258,15 +258,11 @@
         }
 
         async function fetchCsv(file) {
-            // Cache-busting timestamp ensures GitHub doesn't serve an old cached CSV
             const response = await fetch(`${GITHUB_BASE_URL}${file}?t=${Date.now()}`);
             if (!response.ok) throw new Error(`HTTP ${response.status} for ${file}`);
             return parseCSV(await response.text());
         }
 
-        // ---------------------------------------------------------------
-        // Navigation (hash routes: #/women, #/men, #/promen, ...)
-        // ---------------------------------------------------------------
         function getCategoryFromHash() {
             const key = location.hash.replace(/^#\/?/, '');
             return CATEGORIES.find(c => c.key === key) || CATEGORIES[0];
@@ -276,9 +272,9 @@
             document.getElementById('category-nav').innerHTML = CATEGORIES.map(c => {
                 const active = currentCategory && c.key === currentCategory.key;
                 const cls = active
-                    ? 'border-hyrox-500 text-hyrox-500'
+                    ? 'border-hyrox-500 text-hyrox-500 bg-gray-800/40'
                     : 'border-transparent text-gray-400 hover:text-white';
-                return `<a href="#/${c.key}" class="whitespace-nowrap px-4 py-2 text-sm font-semibold border-b-2 ${cls}" ${active ? 'aria-current="page"' : ''}>${escapeHtml(c.label)}</a>`;
+                return `<a href="#/${c.key}" class="whitespace-nowrap px-3.5 py-1.5 text-xs sm:text-sm font-semibold border-b-2 rounded-t-lg transition ${cls}" ${active ? 'aria-current="page"' : ''}>${escapeHtml(c.label)}</a>`;
             }).join('');
         }
 
@@ -313,14 +309,12 @@
                         rows = await fetchCsv(cat.file);
                     } catch (err) {
                         if (!cat.fallback) throw err;
-                        console.warn(`${cat.file} not found, trying ${cat.fallback}`);
                         rows = await fetchCsv(cat.fallback);
                     }
-                    if (myToken !== loadToken) return;   // user already moved to another page
+                    if (myToken !== loadToken) return;
                     datasets[cat.key] = rows;
                 } catch (err) {
                     if (myToken !== loadToken) return;
-                    console.error(`Failed to load ${cat.file}:`, err);
                     showStatus(`
                         <p class="font-semibold text-white mb-1">Could not load ${escapeHtml(cat.label)} results.</p>
                         <p class="text-gray-400">Check that <span class="font-mono text-gray-300">${escapeHtml(cat.file)}</span> has been uploaded to the GitHub repo, then reload.</p>`);
@@ -338,14 +332,14 @@
             filterAndRender();
         }
 
-        // ---------------------------------------------------------------
-        // Filters + table
-        // ---------------------------------------------------------------
         function resetFilterControls() {
             document.getElementById('search-input').value = '';
             ['filter-location', 'filter-season', 'filter-ag'].forEach(id => {
-                document.getElementById(id).selectedIndex = -1;
+                const select = document.getElementById(id);
+                if(select) Array.from(select.options).forEach(opt => opt.selected = false);
             });
+            document.querySelectorAll('.filter-chip').forEach(chip => chip.classList.remove('bg-hyrox-500', 'text-black', 'border-hyrox-500'));
+            document.querySelectorAll('.filter-chip').forEach(chip => chip.classList.add('bg-gray-900', 'text-gray-300', 'border-gray-800'));
             currentSortColumn = 'OverallRank';
             currentSortDirection = 'asc';
             visibleLimit = PAGE_SIZE;
@@ -353,10 +347,42 @@
 
         function initFilters(data) {
             const uniq = (key) => [...new Set(data.map(item => item[key]))].filter(Boolean).sort();
-            const options = (values) => values.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
-            document.getElementById('filter-location').innerHTML = options(uniq('Location'));
-            document.getElementById('filter-season').innerHTML = options(uniq('Season'));
-            document.getElementById('filter-ag').innerHTML = options(uniq('AG'));
+            
+            setupChipFilter('filter-location', uniq('Location'));
+            setupChipFilter('filter-season', uniq('Season'));
+            setupChipFilter('filter-ag', uniq('AG'));
+        }
+
+        function setupChipFilter(id, values) {
+            const select = document.getElementById(id);
+            const container = document.getElementById(`${id}-chips`);
+            
+            select.innerHTML = values.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
+            
+            container.innerHTML = values.map(v => `
+                <button type="button" data-value="${escapeHtml(v)}" class="filter-chip text-xs px-2.5 py-1 rounded-full border border-gray-800 bg-gray-900 text-gray-300 transition">
+                    ${escapeHtml(v)}
+                </button>
+            `).join('');
+
+            container.querySelectorAll('.filter-chip').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const val = btn.getAttribute('data-value');
+                    const opt = Array.from(select.options).find(o => o.value === val);
+                    if (opt) {
+                        opt.selected = !opt.selected;
+                        if (opt.selected) {
+                            btn.classList.remove('bg-gray-900', 'text-gray-300', 'border-gray-800');
+                            btn.classList.add('bg-yellow-400', 'text-black', 'border-yellow-400', 'font-semibold');
+                        } else {
+                            btn.classList.add('bg-gray-900', 'text-gray-300', 'border-gray-800');
+                            btn.classList.remove('bg-yellow-400', 'text-black', 'border-yellow-400', 'font-semibold');
+                        }
+                    }
+                    visibleLimit = PAGE_SIZE;
+                    filterAndRender();
+                });
+            });
         }
 
         function getSelectedValues(selectEl) {
@@ -366,12 +392,12 @@
         function renderHeader() {
             const columns = currentCategory.relay ? COLUMNS_RELAY : COLUMNS_SOLO;
             document.getElementById('results-thead').innerHTML = `
-                <tr class="bg-gray-950 text-gray-400 text-xs uppercase tracking-wider border-b border-gray-800 select-none">
+                <tr class="bg-gray-950 text-gray-400 text-[11px] sm:text-xs uppercase tracking-wider border-b border-gray-800 select-none">
                     ${columns.map(col => {
-                        if (!col.sortKey) return `<th class="py-3 px-4">${escapeHtml(col.label)}</th>`;
+                        if (!col.sortKey) return `<th class="py-3 px-3 sm:px-4">${escapeHtml(col.label)}</th>`;
                         const active = col.sortKey === currentSortColumn;
                         const arrow = active ? (currentSortDirection === 'asc' ? ' ▲' : ' ▼') : '';
-                        return `<th class="py-3 px-4 cursor-pointer hover:text-white transition sort-header ${active ? 'text-hyrox-500' : ''}" data-column="${col.sortKey}">${escapeHtml(col.label)}<span>${arrow}</span></th>`;
+                        return `<th class="py-3 px-3 sm:px-4 cursor-pointer hover:text-white transition sort-header ${active ? 'text-hyrox-500' : ''}" data-column="${col.sortKey}">${escapeHtml(col.label)}<span>${arrow}</span></th>`;
                     }).join('')}
                 </tr>`;
         }
@@ -379,17 +405,17 @@
         function rowHtml(item) {
             const time = (item.Time || '-').replace(/^=\s*"/, '').replace(/"/g, '');
             const who = currentCategory.relay
-                ? `<td class="py-3 px-4 text-xs text-gray-300">${escapeHtml([item.Athlete1, item.Athlete2, item.Athlete3, item.Athlete4].filter(Boolean).join(', '))}</td>
-                   <td class="py-3 px-4 text-xs text-gray-400">${escapeHtml(item.TeamCountries || '-')}</td>`
-                : `<td class="py-3 px-4 text-gray-200">${escapeHtml(item.Athlete || '-')}</td>
-                   <td class="py-3 px-4 text-xs text-gray-400">${escapeHtml(item.Country || '-')}</td>`;
+                ? `<td class="py-3 px-3 sm:px-4 text-xs text-gray-300">${escapeHtml([item.Athlete1, item.Athlete2, item.Athlete3, item.Athlete4].filter(Boolean).join(', '))}</td>
+                   <td class="py-3 px-3 sm:px-4 text-xs text-gray-400">${escapeHtml(item.TeamCountries || '-')}</td>`
+                : `<td class="py-3 px-3 sm:px-4 text-gray-200">${escapeHtml(item.Athlete || '-')}</td>
+                   <td class="py-3 px-3 sm:px-4 text-xs text-gray-400">${escapeHtml(item.Country || '-')}</td>`;
             return `
                 <tr class="hover:bg-gray-900/50 transition">
-                    <td class="py-3 px-4 font-semibold text-hyrox-500">${escapeHtml(item.OverallRank || '-')}</td>
-                    <td class="py-3 px-4">${escapeHtml(item.Location || '-')}</td>
-                    <td class="py-3 px-4">${escapeHtml(item.Season || '-')}</td>
-                    <td class="py-3 px-4"><span class="bg-gray-800 text-gray-200 px-2 py-0.5 rounded text-xs font-medium">${escapeHtml(item.AG || '-')}</span></td>
-                    <td class="py-3 px-4 font-mono text-emerald-400">${escapeHtml(time)}</td>
+                    <td class="py-3 px-3 sm:px-4 font-semibold text-hyrox-500">${escapeHtml(item.OverallRank || '-')}</td>
+                    <td class="py-3 px-3 sm:px-4">${escapeHtml(item.Location || '-')}</td>
+                    <td class="py-3 px-3 sm:px-4">${escapeHtml(item.Season || '-')}</td>
+                    <td class="py-3 px-3 sm:px-4"><span class="bg-gray-800 text-gray-200 px-2 py-0.5 rounded text-[11px] sm:text-xs font-medium">${escapeHtml(item.AG || '-')}</span></td>
+                    <td class="py-3 px-3 sm:px-4 font-mono text-emerald-400">${escapeHtml(time)}</td>
                     ${who}
                 </tr>`;
         }
@@ -458,10 +484,16 @@
             document.getElementById('show-more-wrap').classList.toggle('hidden', count <= shown);
         }
 
-        // ---------------------------------------------------------------
-        // Events
-        // ---------------------------------------------------------------
-        // Header is rebuilt on every render, so listen on the <thead> itself
+        // Mobile filter drawer toggle
+        document.getElementById('mobile-filter-toggle').addEventListener('click', () => {
+            const container = document.getElementById('filters-container');
+            container.classList.toggle('hidden');
+        });
+
+        document.getElementById('apply-filters-btn').addEventListener('click', () => {
+            document.getElementById('filters-container').classList.add('hidden');
+        });
+
         document.getElementById('results-thead').addEventListener('click', (e) => {
             const th = e.target.closest('.sort-header');
             if (!th) return;
@@ -474,9 +506,6 @@
 
         const rerender = () => { visibleLimit = PAGE_SIZE; filterAndRender(); };
         document.getElementById('search-input').addEventListener('input', rerender);
-        document.getElementById('filter-location').addEventListener('change', rerender);
-        document.getElementById('filter-season').addEventListener('change', rerender);
-        document.getElementById('filter-ag').addEventListener('change', rerender);
 
         document.getElementById('show-more-btn').addEventListener('click', () => {
             visibleLimit += PAGE_SIZE;
@@ -488,9 +517,13 @@
             filterAndRender();
         });
 
+        document.getElementById('mobile-reset-btn').addEventListener('click', () => {
+            resetFilterControls();
+            filterAndRender();
+        });
+
         window.addEventListener('hashchange', () => openCategory(getCategoryFromHash()));
 
-        // Offline support
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('sw.js').catch(err => console.warn('Service worker not registered:', err));
