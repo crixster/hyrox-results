@@ -9,7 +9,7 @@ param(
     [string[]]$AcceptedSeasonYears = @('7-2025'),
     [int]$DelayMs = 400,
     [switch]$PlainTimes,
-    [switch]$SkipAG,
+    [switch]$SkipAG,                # no longer used (age groups come from the ranking pages); kept so old commands still work
     [switch]$Only40Plus
 )
 
@@ -50,56 +50,6 @@ function Get-Html([string]$url) {
 
 function Strip-Tags([string]$s, [string]$replacement = " ") {
     return [System.Net.WebUtility]::HtmlDecode(($s -replace '<[^>]+>', $replacement)).Trim()
-}
-
-function Get-AgeGroupIds([string]$rankPath, [string]$ag, [int]$pageSize = 100) {
-    $ids = New-Object 'System.Collections.Generic.HashSet[string]'
-    $agQ = [uri]::EscapeDataString($ag)
-
-    for ($page = 1; $page -le 10; $page++) {
-        $h = Get-Html "$root$rankPath`?ag=$agQ&p=$page"
-        if (-not $h) { break }
-
-        $segments = New-Object 'System.Collections.Generic.List[object]'
-        $cur = $null
-        $lastT = -1
-
-        foreach ($tr in [regex]::Matches($h, '<tr\b[^>]*>(.*?)</tr>', 'Singleline')) {
-            $rowHtml = $tr.Groups[1].Value
-            $m = [regex]::Match($rowHtml, 'href="' + $hostRx + '/result/([A-Za-z0-9]+)"')
-            if (-not $m.Success) { continue }
-            $id = $m.Groups[1].Value
-
-            $t = $null
-            $tm = [regex]::Match((Strip-Tags $rowHtml " "), '(\d{1,2}(?::\d{2}){1,2})')
-            if ($tm.Success) {
-                $secs = 0
-                foreach ($part in ($tm.Groups[1].Value -split ':')) { $secs = $secs * 60 + [int]$part }
-                $t = $secs
-            }
-
-            $startNew = ($null -eq $cur) -or $cur.Contains($id) -or (($null -ne $t) -and ($lastT -ge 0) -and ($t -lt $lastT))
-            if ($startNew) {
-                $cur = New-Object 'System.Collections.Generic.HashSet[string]'
-                $segments.Add($cur)
-                $lastT = -1
-            }
-            [void]$cur.Add($id)
-            if ($null -ne $t) { $lastT = $t }
-        }
-
-        $pageIds = New-Object 'System.Collections.Generic.HashSet[string]'
-        if ($segments.Count -gt 0) {
-            $best = $segments | Sort-Object { $_.Count } | Select-Object -First 1
-            foreach ($id in $best) { [void]$pageIds.Add($id) }
-        }
-
-        $before = $ids.Count
-        foreach ($id in $pageIds) { [void]$ids.Add($id) }
-        if ($pageIds.Count -lt $pageSize) { break }
-        if ($ids.Count -eq $before) { break }
-    }
-    return ,$ids
 }
 
 function Export-PlainCsv($objects, [string[]]$columns, [string]$path) {
@@ -320,8 +270,11 @@ foreach ($cat in $categoriesToRun) {
                 $time  = if ($timeM.Success) { $timeM.Groups[1].Value } else { "" }
                 $diff  = if ($diffM.Success) { $diffM.Groups[1].Value } else { "" }
 
+                # Age group badge shown on the row, e.g. 16-24, 25-29, 40-44 or 80+
+                $agM = [regex]::Match($text, '(?<![\d:+])(\d{2}\s*-\s*\d{2}|\d{2}\+)(?![\d:])')
+                $ag  = if ($agM.Success) { $agM.Groups[1].Value -replace '\s', '' } else { "" }
+
                 $overall = ""
-                $ag = ""
                 if ($time) { $rank++; $overall = $rank }
 
                 $teamCountries = ($ctrys | Where-Object { $_ } | Select-Object -Unique) -join "; "
@@ -376,17 +329,12 @@ foreach ($cat in $categoriesToRun) {
             if ($newOnPage -eq 0) { break }
         }
 
-        if (-not $SkipAG -and $entriesThisEvent -gt 0) {
-            $eventIds = @{}
-            for ($i = $firstRow; $i -lt $rows.Count; $i++) { $eventIds[$rows[$i].ResultId] = $true }
-
-            $ids40 = Get-AgeGroupIds $rankPath '40+'
-            $match40 = @($ids40 | Where-Object { $eventIds.ContainsKey($_) }).Count
-
-            if ($match40 -lt $entriesThisEvent) {
-                for ($i = $firstRow; $i -lt $rows.Count; $i++) {
-                    $rows[$i].AG = if ($ids40.Contains($rows[$i].ResultId)) { "40+" } else { "U40" }
-                }
+        if ($entriesThisEvent -gt 0) {
+            $withAg = 0
+            for ($i = $firstRow; $i -lt $rows.Count; $i++) { if ($rows[$i].AG) { $withAg++ } }
+            Write-Host "    age group found for $withAg of $entriesThisEvent rows"
+            if ($withAg -eq 0) {
+                Write-Warning "  no age group badges found in the page HTML for $($e.EventSlug)"
             }
         }
 
