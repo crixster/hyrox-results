@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hyrox Asia Team Relay Men - Filter & Analytics</title>
+    <title>Hyrox Asia Results Explorer</title>
     <meta name="theme-color" content="#ff6600">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-192.png">
@@ -24,11 +24,12 @@
 <body class="bg-gray-950 text-gray-100 min-h-screen font-sans antialiased">
 <!-- Header -->
 <header class="bg-gray-900 border-b border-gray-800 sticky top-0 z-30 shadow-md">
-    <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+    <div class="max-w-7xl mx-auto px-4 pt-4 flex flex-col sm:flex-row justify-between items-center gap-4">
         <div class="flex items-center space-x-3">
             <div class="bg-yellow-400 text-black font-extrabold px-3 py-1.5 rounded text-lg tracking-wider">HYROX</div>
             <div>
-                <h1 class="text-xl font-bold tracking-tight">Asia Team Relay Men Explorer</h1>
+                <h1 class="text-xl font-bold tracking-tight">Asia Results Explorer</h1>
+                <p id="page-subtitle" class="text-xs text-gray-400"></p>
             </div>
         </div>
         <div class="flex items-center gap-3">
@@ -37,9 +38,15 @@
             </button>
         </div>
     </div>
+    <!-- Category pages (built by JS) -->
+    <nav id="category-nav" class="max-w-7xl mx-auto px-4 mt-3 flex gap-1 overflow-x-auto" aria-label="Categories"></nav>
 </header>
 
     <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
+        <!-- Loading / error message -->
+        <div id="status" class="hidden bg-gray-900 border border-gray-800 rounded-xl p-6 text-sm text-gray-300"></div>
+
+        <div id="content" class="space-y-6">
         <!-- KPI Cards -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div class="bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-sm flex items-center justify-between">
@@ -88,7 +95,7 @@
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
-                    <label class="block text-xs font-medium text-gray-400 mb-1">Search Athlete / Team Country</label>
+                    <label id="search-label" class="block text-xs font-medium text-gray-400 mb-1">Search</label>
                     <input type="text" id="search-input" placeholder="e.g. Zaid, Singapore..." class="w-full bg-gray-950 border border-gray-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-hyrox-500">
                 </div>
                 <div>
@@ -111,58 +118,92 @@
 
         <!-- Data Table -->
         <div class="bg-gray-900 border border-gray-800 rounded-xl shadow-sm overflow-hidden">
-    <div class="p-4 border-b border-gray-800 flex justify-between items-center">
-    <h3 class="font-semibold text-sm">Race Results</h3>
-    <span id="table-count" class="text-xs text-gray-400">Showing 0 results</span>
-</div>
+            <div class="p-4 border-b border-gray-800 flex justify-between items-center">
+                <h3 id="table-title" class="font-semibold text-sm">Race Results</h3>
+                <span id="table-count" class="text-xs text-gray-400">Showing 0 results</span>
+            </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse text-sm">
-                    <thead>
-                        <tr class="bg-gray-950 text-gray-400 text-xs uppercase tracking-wider border-b border-gray-800 select-none">
-                            <th class="py-3 px-4 cursor-pointer hover:text-white transition sort-header" data-column="OverallRank">
-                                Rank <span class="sort-indicator"></span>
-                            </th>
-                            <th class="py-3 px-4 cursor-pointer hover:text-white transition sort-header" data-column="Location">
-                                Location <span class="sort-indicator"></span>
-                            </th>
-                            <th class="py-3 px-4 cursor-pointer hover:text-white transition sort-header" data-column="Season">
-                                Season <span class="sort-indicator"></span>
-                            </th>
-                            <th class="py-3 px-4 cursor-pointer hover:text-white transition sort-header" data-column="AG">
-                                AG <span class="sort-indicator"></span>
-                            </th>
-                            <th class="py-3 px-4 cursor-pointer hover:text-white transition sort-header" data-column="Time">
-                                Time <span class="sort-indicator"></span>
-                            </th>
-                            <th class="py-3 px-4">Athletes</th>
-                            <th class="py-3 px-4 cursor-pointer hover:text-white transition sort-header" data-column="TeamCountries">
-                                Team Countries <span class="sort-indicator"></span>
-                            </th>
-                        </tr>
-                    </thead>
+                    <thead id="results-thead"></thead>
                     <tbody id="results-tbody" class="divide-y divide-gray-800 text-gray-300">
                         <!-- Populated by JS -->
                     </tbody>
                 </table>
             </div>
+            <div id="show-more-wrap" class="hidden p-4 border-t border-gray-800 text-center">
+                <button id="show-more-btn" class="bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm font-medium px-4 py-2 rounded-lg border border-gray-700 transition">
+                    Show more
+                </button>
+            </div>
+        </div>
         </div>
     </main>
 
     <footer class="text-center py-6 text-xs text-gray-500">
-        Hyrox Asia Team Relay Men PWA &bull; Hosted on GitHub Pages &bull; Offline Ready
+        Hyrox Asia Results PWA &bull; Hosted on GitHub Pages &bull; Offline Ready
     </footer>
 
     <!-- App Logic -->
     <script>
-        const GITHUB_CSV_URL = 'https://raw.githubusercontent.com/crixster/hyrox-results/main/results.csv';
+        // ---------------------------------------------------------------
+        // Config: one entry per category / CSV file
+        // ---------------------------------------------------------------
+        const GITHUB_BASE_URL = 'https://raw.githubusercontent.com/crixster/hyrox-results/main/';
+        const PAGE_SIZE = 250;
 
+        const CATEGORIES = [
+            { key: 'women',      label: 'Women',            file: 'Hyrox_Asia_Women.csv',           relay: false },
+            { key: 'men',        label: 'Men',              file: 'Hyrox_Asia_Men.csv',             relay: false },
+            { key: 'promen',     label: 'Pro Men',          file: 'Hyrox_Asia_ProMen.csv',          relay: false },
+            // fallback: the old single-file name, so the existing results.csv keeps working
+            { key: 'relaymen',   label: 'Team Relay Men',   file: 'Hyrox_Asia_TeamRelayMen.csv',    relay: true, fallback: 'results.csv' },
+            { key: 'relaymixed', label: 'Team Relay Mixed', file: 'Hyrox_Asia_TeamRelayMixed.csv',  relay: true }
+        ];
+
+        // Table columns. sortKey = column used when the header is clicked (omit = not sortable)
+        const COLUMNS_SOLO = [
+            { label: 'Rank',     sortKey: 'OverallRank' },
+            { label: 'Location', sortKey: 'Location' },
+            { label: 'Season',   sortKey: 'Season' },
+            { label: 'AG',       sortKey: 'AG' },
+            { label: 'Time',     sortKey: 'Time' },
+            { label: 'Athlete',  sortKey: 'Athlete' },
+            { label: 'Country',  sortKey: 'Country' }
+        ];
+        const COLUMNS_RELAY = [
+            { label: 'Rank',           sortKey: 'OverallRank' },
+            { label: 'Location',       sortKey: 'Location' },
+            { label: 'Season',         sortKey: 'Season' },
+            { label: 'AG',             sortKey: 'AG' },
+            { label: 'Time',           sortKey: 'Time' },
+            { label: 'Athletes' },
+            { label: 'Team Countries', sortKey: 'TeamCountries' }
+        ];
+
+        // ---------------------------------------------------------------
+        // State
+        // ---------------------------------------------------------------
+        const datasets = {};          // category key -> parsed rows (loaded once per visit)
+        let currentCategory = null;
         let currentDataset = [];
         let currentSortColumn = 'OverallRank';
         let currentSortDirection = 'asc';
+        let visibleLimit = PAGE_SIZE;
+        let loadToken = 0;            // guards against slow loads finishing after the user switched pages
+
+        // ---------------------------------------------------------------
+        // Helpers
+        // ---------------------------------------------------------------
+        function escapeHtml(str) {
+            return String(str ?? '').replace(/[&<>"']/g, c => (
+                { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+            ));
+        }
 
         function timeToSeconds(timeStr) {
             if (!timeStr) return 0;
             const parts = timeStr.split(':').map(Number);
+            if (parts.some(isNaN)) return 0;
             if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
             if (parts.length === 2) return parts[0] * 60 + parts[1];
             return 0;
@@ -179,6 +220,7 @@
         }
 
         function parseCSV(text) {
+            text = text.replace(/^\uFEFF/, '');
             const lines = text.split(/\r\n|\n/);
             if (lines.length < 2) return [];
             const headers = parseCSVLine(lines[0]);
@@ -197,78 +239,176 @@
             return results;
         }
 
-function parseCSVLine(line) {
-    const result = [];
-    let startValue = 0;
-    let inQuotes = false;
-    for (let i = 0; i < line.length; i++) {
-        if (line[i] === '"') inQuotes = !inQuotes;
-        else if (line[i] === ',' && !inQuotes) {
-            let val = line.substring(startValue, i).trim();
-            // Strip Excel formula wrapper ="" and surrounding quotes
-            val = val.replace(/^=\s*"/, '').replace(/^"|"$/g, '').replace(/""/g, '"').trim();
-            result.push(val);
-            startValue = i + 1;
+        function parseCSVLine(line) {
+            const result = [];
+            let startValue = 0;
+            let inQuotes = false;
+            const clean = (v) => v.trim()
+                // Strip Excel formula wrapper ="" and surrounding quotes
+                .replace(/^=\s*"/, '').replace(/^"|"$/g, '').replace(/""/g, '"').trim();
+            for (let i = 0; i < line.length; i++) {
+                if (line[i] === '"') inQuotes = !inQuotes;
+                else if (line[i] === ',' && !inQuotes) {
+                    result.push(clean(line.substring(startValue, i)));
+                    startValue = i + 1;
+                }
+            }
+            result.push(clean(line.substring(startValue)));
+            return result;
         }
-    }
-    let val = line.substring(startValue).trim();
-    val = val.replace(/^=\s*"/, '').replace(/^"|"$/g, '').replace(/""/g, '"').trim();
-    result.push(val);
-    return result;
-}
 
-async function fetchGitHubData() {
-    try {
-        // Cache-busting timestamp ensures GitHub doesn't serve old cached CSV
-        const csvUrl = `${GITHUB_CSV_URL}?t=${new Date().getTime()}`;
-        const response = await fetch(csvUrl);
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
+        async function fetchCsv(file) {
+            // Cache-busting timestamp ensures GitHub doesn't serve an old cached CSV
+            const response = await fetch(`${GITHUB_BASE_URL}${file}?t=${Date.now()}`);
+            if (!response.ok) throw new Error(`HTTP ${response.status} for ${file}`);
+            return parseCSV(await response.text());
         }
-        
-        const csvText = await response.text();
-        const parsed = parseCSV(csvText);
-        
-        if (parsed && parsed.length > 0) {
-            currentDataset = parsed;
-            console.log(`Successfully loaded ${parsed.length} results from results.csv`);
-        } else {
-            console.warn('results.csv was fetched but appears to be empty.');
-        }
-    } catch (err) {
-        console.error('Failed to load results.csv:', err);
-    }
 
-    // Populate dynamic location/season/AG filter dropdowns & render table
-    initFilters(currentDataset);
-    filterAndRender();
-}
+        // ---------------------------------------------------------------
+        // Navigation (hash routes: #/women, #/men, #/promen, ...)
+        // ---------------------------------------------------------------
+        function getCategoryFromHash() {
+            const key = location.hash.replace(/^#\/?/, '');
+            return CATEGORIES.find(c => c.key === key) || CATEGORIES[0];
+        }
+
+        function renderNav() {
+            document.getElementById('category-nav').innerHTML = CATEGORIES.map(c => {
+                const active = currentCategory && c.key === currentCategory.key;
+                const cls = active
+                    ? 'border-hyrox-500 text-hyrox-500'
+                    : 'border-transparent text-gray-400 hover:text-white';
+                return `<a href="#/${c.key}" class="whitespace-nowrap px-4 py-2 text-sm font-semibold border-b-2 ${cls}" ${active ? 'aria-current="page"' : ''}>${escapeHtml(c.label)}</a>`;
+            }).join('');
+        }
+
+        function showStatus(html) {
+            const status = document.getElementById('status');
+            status.innerHTML = html;
+            status.classList.remove('hidden');
+            document.getElementById('content').classList.add('hidden');
+        }
+
+        function showContent() {
+            document.getElementById('status').classList.add('hidden');
+            document.getElementById('content').classList.remove('hidden');
+        }
+
+        async function openCategory(cat) {
+            const myToken = ++loadToken;
+            currentCategory = cat;
+            document.title = `${cat.label} - Hyrox Asia Results`;
+            document.getElementById('page-subtitle').textContent = cat.label;
+            document.getElementById('table-title').textContent = `${cat.label} Results`;
+            document.getElementById('search-label').textContent =
+                cat.relay ? 'Search Athlete / Team Country' : 'Search Athlete / Country';
+            renderNav();
+            resetFilterControls();
+
+            if (!datasets[cat.key]) {
+                showStatus(`<p>Loading ${escapeHtml(cat.label)} results...</p>`);
+                try {
+                    let rows;
+                    try {
+                        rows = await fetchCsv(cat.file);
+                    } catch (err) {
+                        if (!cat.fallback) throw err;
+                        console.warn(`${cat.file} not found, trying ${cat.fallback}`);
+                        rows = await fetchCsv(cat.fallback);
+                    }
+                    if (myToken !== loadToken) return;   // user already moved to another page
+                    datasets[cat.key] = rows;
+                } catch (err) {
+                    if (myToken !== loadToken) return;
+                    console.error(`Failed to load ${cat.file}:`, err);
+                    showStatus(`
+                        <p class="font-semibold text-white mb-1">Could not load ${escapeHtml(cat.label)} results.</p>
+                        <p class="text-gray-400">Check that <span class="font-mono text-gray-300">${escapeHtml(cat.file)}</span> has been uploaded to the GitHub repo, then reload.</p>`);
+                    return;
+                }
+            }
+
+            currentDataset = datasets[cat.key];
+            if (currentDataset.length === 0) {
+                showStatus(`<p>${escapeHtml(cat.label)}: the file loaded but contains no results.</p>`);
+                return;
+            }
+            showContent();
+            initFilters(currentDataset);
+            filterAndRender();
+        }
+
+        // ---------------------------------------------------------------
+        // Filters + table
+        // ---------------------------------------------------------------
+        function resetFilterControls() {
+            document.getElementById('search-input').value = '';
+            ['filter-location', 'filter-season', 'filter-ag'].forEach(id => {
+                document.getElementById(id).selectedIndex = -1;
+            });
+            currentSortColumn = 'OverallRank';
+            currentSortDirection = 'asc';
+            visibleLimit = PAGE_SIZE;
+        }
 
         function initFilters(data) {
-            const locations = [...new Set(data.map(item => item.Location))].filter(Boolean).sort();
-            const seasons = [...new Set(data.map(item => item.Season))].filter(Boolean).sort();
-            const ags = [...new Set(data.map(item => item.AG))].filter(Boolean).sort();
-
-            document.getElementById('filter-location').innerHTML = locations.map(l => `<option value="${l}">${l}</option>`).join('');
-            document.getElementById('filter-season').innerHTML = seasons.map(s => `<option value="${s}">${s}</option>`).join('');
-            document.getElementById('filter-ag').innerHTML = ags.map(a => `<option value="${a}">${a}</option>`).join('');
+            const uniq = (key) => [...new Set(data.map(item => item[key]))].filter(Boolean).sort();
+            const options = (values) => values.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
+            document.getElementById('filter-location').innerHTML = options(uniq('Location'));
+            document.getElementById('filter-season').innerHTML = options(uniq('Season'));
+            document.getElementById('filter-ag').innerHTML = options(uniq('AG'));
         }
 
         function getSelectedValues(selectEl) {
             return Array.from(selectEl.selectedOptions).map(opt => opt.value);
         }
 
+        function renderHeader() {
+            const columns = currentCategory.relay ? COLUMNS_RELAY : COLUMNS_SOLO;
+            document.getElementById('results-thead').innerHTML = `
+                <tr class="bg-gray-950 text-gray-400 text-xs uppercase tracking-wider border-b border-gray-800 select-none">
+                    ${columns.map(col => {
+                        if (!col.sortKey) return `<th class="py-3 px-4">${escapeHtml(col.label)}</th>`;
+                        const active = col.sortKey === currentSortColumn;
+                        const arrow = active ? (currentSortDirection === 'asc' ? ' ▲' : ' ▼') : '';
+                        return `<th class="py-3 px-4 cursor-pointer hover:text-white transition sort-header ${active ? 'text-hyrox-500' : ''}" data-column="${col.sortKey}">${escapeHtml(col.label)}<span>${arrow}</span></th>`;
+                    }).join('')}
+                </tr>`;
+        }
+
+        function rowHtml(item) {
+            const time = (item.Time || '-').replace(/^=\s*"/, '').replace(/"/g, '');
+            const who = currentCategory.relay
+                ? `<td class="py-3 px-4 text-xs text-gray-300">${escapeHtml([item.Athlete1, item.Athlete2, item.Athlete3, item.Athlete4].filter(Boolean).join(', '))}</td>
+                   <td class="py-3 px-4 text-xs text-gray-400">${escapeHtml(item.TeamCountries || '-')}</td>`
+                : `<td class="py-3 px-4 text-gray-200">${escapeHtml(item.Athlete || '-')}</td>
+                   <td class="py-3 px-4 text-xs text-gray-400">${escapeHtml(item.Country || '-')}</td>`;
+            return `
+                <tr class="hover:bg-gray-900/50 transition">
+                    <td class="py-3 px-4 font-semibold text-hyrox-500">${escapeHtml(item.OverallRank || '-')}</td>
+                    <td class="py-3 px-4">${escapeHtml(item.Location || '-')}</td>
+                    <td class="py-3 px-4">${escapeHtml(item.Season || '-')}</td>
+                    <td class="py-3 px-4"><span class="bg-gray-800 text-gray-200 px-2 py-0.5 rounded text-xs font-medium">${escapeHtml(item.AG || '-')}</span></td>
+                    <td class="py-3 px-4 font-mono text-emerald-400">${escapeHtml(time)}</td>
+                    ${who}
+                </tr>`;
+        }
+
         function filterAndRender() {
+            if (!currentCategory) return;
+
             const searchQuery = document.getElementById('search-input').value.toLowerCase();
             const selectedLocations = getSelectedValues(document.getElementById('filter-location'));
             const selectedSeasons = getSelectedValues(document.getElementById('filter-season'));
             const selectedAgs = getSelectedValues(document.getElementById('filter-ag'));
 
+            const searchFields = currentCategory.relay
+                ? ['Athlete1', 'Athlete2', 'Athlete3', 'Athlete4', 'TeamCountries', 'Location']
+                : ['Athlete', 'Country', 'Location'];
+
             let filtered = currentDataset.filter(item => {
-                const matchSearch = !searchQuery || 
-                    [item.Athlete1, item.Athlete2, item.Athlete3, item.Athlete4, item.TeamCountries, item.Location]
-                        .some(val => val && val.toLowerCase().includes(searchQuery));
+                const matchSearch = !searchQuery ||
+                    searchFields.some(f => item[f] && item[f].toLowerCase().includes(searchQuery));
                 const matchLoc = selectedLocations.length === 0 || selectedLocations.includes(item.Location);
                 const matchSeason = selectedSeasons.length === 0 || selectedSeasons.includes(item.Season);
                 const matchAg = selectedAgs.length === 0 || selectedAgs.includes(item.AG);
@@ -282,8 +422,8 @@ async function fetchGitHubData() {
                     valA = Number(valA) || 99999;
                     valB = Number(valB) || 99999;
                 } else if (currentSortColumn === 'Time') {
-                    valA = timeToSeconds(valA);
-                    valB = timeToSeconds(valB);
+                    valA = timeToSeconds(valA) || 999999;
+                    valB = timeToSeconds(valB) || 999999;
                 } else {
                     valA = (valA || '').toString().toLowerCase();
                     valB = (valB || '').toString().toLowerCase();
@@ -294,76 +434,70 @@ async function fetchGitHubData() {
             });
 
             const count = filtered.length;
+            const shown = Math.min(count, visibleLimit);
             document.getElementById('kpi-count').textContent = count;
-            document.getElementById('table-count').textContent = `Showing ${count} results`;
+            document.getElementById('table-count').textContent =
+                count > shown ? `Showing ${shown} of ${count} results` : `Showing ${count} results`;
 
-            if (count > 0) {
-                const timesInSecs = filtered.map(i => timeToSeconds(i.Time)).filter(t => t > 0);
-                if (timesInSecs.length > 0) {
-                    document.getElementById('kpi-fastest').textContent = secondsToTime(Math.min(...timesInSecs));
-                    document.getElementById('kpi-slowest').textContent = secondsToTime(Math.max(...timesInSecs));
-                    document.getElementById('kpi-average').textContent = secondsToTime(Math.round(timesInSecs.reduce((a, b) => a + b, 0) / timesInSecs.length));
-                }
+            const timesInSecs = filtered.map(i => timeToSeconds(i.Time)).filter(t => t > 0);
+            if (timesInSecs.length > 0) {
+                document.getElementById('kpi-fastest').textContent = secondsToTime(Math.min(...timesInSecs));
+                document.getElementById('kpi-slowest').textContent = secondsToTime(Math.max(...timesInSecs));
+                document.getElementById('kpi-average').textContent =
+                    secondsToTime(Math.round(timesInSecs.reduce((a, b) => a + b, 0) / timesInSecs.length));
             } else {
                 document.getElementById('kpi-fastest').textContent = '-';
                 document.getElementById('kpi-slowest').textContent = '-';
                 document.getElementById('kpi-average').textContent = '-';
             }
 
-            document.querySelectorAll('.sort-header').forEach(th => {
-                const indicator = th.querySelector('.sort-indicator');
-                if (th.getAttribute('data-column') === currentSortColumn) {
-                    indicator.textContent = currentSortDirection === 'asc' ? ' ▲' : ' ▼';
-                    th.classList.add('text-hyrox-500');
-                } else {
-                    indicator.textContent = '';
-                    th.classList.remove('text-hyrox-500');
-                }
-            });
-
-            const tbody = document.getElementById('results-tbody');
-            tbody.innerHTML = filtered.slice(0, 250).map(item => `
-                <tr class="hover:bg-gray-900/50 transition">
-                    <td class="py-3 px-4 font-semibold text-hyrox-500">${item.OverallRank || '-'}</td>
-                    <td class="py-3 px-4">${item.Location || '-'}</td>
-                    <td class="py-3 px-4">${item.Season || '-'}</td>
-                    <td class="py-3 px-4"><span class="bg-gray-800 text-gray-200 px-2 py-0.5 rounded text-xs font-medium">${item.AG || '-'}</span></td>
-                    <td class="py-3 px-4 font-mono text-emerald-400">${(item.Time || '-').replace(/^=\s*"/, '').replace(/"/g, '')}</td>
-                    <td class="py-3 px-4 text-xs text-gray-300">
-                        ${[item.Athlete1, item.Athlete2, item.Athlete3, item.Athlete4].filter(Boolean).join(', ')}
-                    </td>
-                    <td class="py-3 px-4 text-xs text-gray-400">${item.TeamCountries || '-'}</td>
-                </tr>
-            `).join('') || `<tr><td colspan="7" class="text-center py-8 text-gray-500">No race results found.</td></tr>`;
+            renderHeader();
+            document.getElementById('results-tbody').innerHTML =
+                filtered.slice(0, visibleLimit).map(rowHtml).join('') ||
+                `<tr><td colspan="7" class="text-center py-8 text-gray-500">No race results found.</td></tr>`;
+            document.getElementById('show-more-wrap').classList.toggle('hidden', count <= shown);
         }
 
-    
-
-        document.querySelectorAll('.sort-header').forEach(th => {
-            th.addEventListener('click', () => {
-                const column = th.getAttribute('data-column');
-                if (currentSortColumn === column) currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
-                else { currentSortColumn = column; currentSortDirection = 'asc'; }
-                filterAndRender();
-            });
-        });
-
-        document.getElementById('search-input').addEventListener('input', filterAndRender);
-        document.getElementById('filter-location').addEventListener('change', filterAndRender);
-        document.getElementById('filter-season').addEventListener('change', filterAndRender);
-        document.getElementById('filter-ag').addEventListener('change', filterAndRender);
-
-        document.getElementById('reset-btn').addEventListener('click', () => {
-            document.getElementById('search-input').value = '';
-            document.getElementById('filter-location').selectedIndex = -1;
-            document.getElementById('filter-season').selectedIndex = -1;
-            document.getElementById('filter-ag').selectedIndex = -1;
-            currentSortColumn = 'OverallRank';
-            currentSortDirection = 'asc';
+        // ---------------------------------------------------------------
+        // Events
+        // ---------------------------------------------------------------
+        // Header is rebuilt on every render, so listen on the <thead> itself
+        document.getElementById('results-thead').addEventListener('click', (e) => {
+            const th = e.target.closest('.sort-header');
+            if (!th) return;
+            const column = th.getAttribute('data-column');
+            if (currentSortColumn === column) currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+            else { currentSortColumn = column; currentSortDirection = 'asc'; }
+            visibleLimit = PAGE_SIZE;
             filterAndRender();
         });
 
-        fetchGitHubData();
+        const rerender = () => { visibleLimit = PAGE_SIZE; filterAndRender(); };
+        document.getElementById('search-input').addEventListener('input', rerender);
+        document.getElementById('filter-location').addEventListener('change', rerender);
+        document.getElementById('filter-season').addEventListener('change', rerender);
+        document.getElementById('filter-ag').addEventListener('change', rerender);
+
+        document.getElementById('show-more-btn').addEventListener('click', () => {
+            visibleLimit += PAGE_SIZE;
+            filterAndRender();
+        });
+
+        document.getElementById('reset-btn').addEventListener('click', () => {
+            resetFilterControls();
+            filterAndRender();
+        });
+
+        window.addEventListener('hashchange', () => openCategory(getCategoryFromHash()));
+
+        // Offline support
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').catch(err => console.warn('Service worker not registered:', err));
+            });
+        }
+
+        openCategory(getCategoryFromHash());
     </script>
 </body>
 </html>
