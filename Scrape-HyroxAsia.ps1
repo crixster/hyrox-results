@@ -1,0 +1,417 @@
+param(
+    [Parameter(Mandatory = $true)]
+    [ValidateSet('Women', 'Men', 'ProMen', 'TeamRelayMen', 'TeamRelayMixed', 'All')]
+    [string]$Category,
+
+    [string]$OutDir = "",
+    [string[]]$Only = @(),
+    [int[]]$Seasons = @(8, 9),
+    [string[]]$AcceptedSeasonYears = @('7-2025'),
+    [int]$DelayMs = 400,
+    [switch]$PlainTimes,
+    [switch]$SkipAG,
+    [switch]$Only40Plus
+)
+
+$ErrorActionPreference = "Stop"
+try { [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 } catch {}
+
+$root   = "https://www.hyresult.com"
+$hostRx = '(?:https://www\.hyresult\.com)?'
+
+if (-not $OutDir) {
+    # Default: the same folder as this script (the repo root), so the PWA finds the CSVs
+    # next to its own files. $PSScriptRoot is empty if the code is pasted into a console,
+    # so fall back to the current folder in that case.
+    $OutDir = if ($PSScriptRoot) { $PSScriptRoot } else { (Get-Location).Path }
+}
+if (-not (Test-Path $OutDir)) { New-Item -ItemType Directory -Path $OutDir -Force | Out-Null }
+
+$categoriesToRun = if ($Category -eq 'All') {
+    @('Women', 'Men', 'ProMen', 'TeamRelayMen', 'TeamRelayMixed')
+} else {
+    @($Category)
+}
+
+function Get-Html([string]$url) {
+    for ($try = 1; $try -le 3; $try++) {
+        try {
+            $r = Invoke-WebRequest -Uri $url -UseBasicParsing -TimeoutSec 30 `
+                 -Headers @{ "User-Agent" = "Mozilla/5.0 (personal research script)" }
+            Start-Sleep -Milliseconds $DelayMs
+            return [string]$r.Content
+        } catch {
+            Write-Warning "  attempt $try failed for $url : $($_.Exception.Message)"
+            Start-Sleep -Seconds (2 * $try)
+        }
+    }
+    return $null
+}
+
+function Strip-Tags([string]$s, [string]$replacement = " ") {
+    return [System.Net.WebUtility]::HtmlDecode(($s -replace '<[^>]+>', $replacement)).Trim()
+}
+
+function Get-AgeGroupIds([string]$rankPath, [string]$ag, [int]$pageSize = 100) {
+    $ids = New-Object 'System.Collections.Generic.HashSet[string]'
+    $agQ = [uri]::EscapeDataString($ag)
+
+    for ($page = 1; $page -le 10; $page++) {
+        $h = Get-Html "$root$rankPath`?ag=$agQ&p=$page"
+        if (-not $h) { break }
+
+        $segments = New-Object 'System.Collections.Generic.List[object]'
+        $cur = $null
+        $lastT = -1
+
+        foreach ($tr in [regex]::Matches($h, '<tr\b[^>]*>(.*?)</tr>', 'Singleline')) {
+            $rowHtml = $tr.Groups[1].Value
+            $m = [regex]::Match($rowHtml, 'href="' + $hostRx + '/result/([A-Za-z0-9]+)"')
+            if (-not $m.Success) { continue }
+            $id = $m.Groups[1].Value
+
+            $t = $null
+            $tm = [regex]::Match((Strip-Tags $rowHtml " "), '(\d{1,2}(?::\d{2}){1,2})')
+            if ($tm.Success) {
+                $secs = 0
+                foreach ($part in ($tm.Groups[1].Value -split ':')) { $secs = $secs * 60 + [int]$part }
+                $t = $secs
+            }
+
+            $startNew = ($null -eq $cur) -or $cur.Contains($id) -or (($null -ne $t) -and ($lastT -ge 0) -and ($t -lt $lastT))
+            if ($startNew) {
+                $cur = New-Object 'System.Collections.Generic.HashSet[string]'
+                $segments.Add($cur)
+                $lastT = -1
+            }
+            [void]$cur.Add($id)
+            if ($null -ne $t) { $lastT = $t }
+        }
+
+        $pageIds = New-Object 'System.Collections.Generic.HashSet[string]'
+        if ($segments.Count -gt 0) {
+            $best = $segments | Sort-Object { $_.Count } | Select-Object -First 1
+            foreach ($id in $best) { [void]$pageIds.Add($id) }
+        }
+
+        $before = $ids.Count
+        foreach ($id in $pageIds) { [void]$ids.Add($id) }
+        if ($pageIds.Count -lt $pageSize) { break }
+        if ($ids.Count -eq $before) { break }
+    }
+    return ,$ids
+}
+
+function Export-PlainCsv($objects, [string[]]$columns, [string]$path) {
+    $lines = New-Object 'System.Collections.Generic.List[string]'
+    $lines.Add(($columns -join ','))
+    foreach ($o in $objects) {
+        $vals = foreach ($c in $columns) {
+            $v = [string]$o.$c
+            if ($v -match '^="[^"]*"$') { $v }
+            elseif ($v -match '[,"\r\n]') { '"' + $v.Replace('"', '""') + '"' }
+            else { $v }
+        }
+        $lines.Add(($vals -join ','))
+    }
+    [System.IO.File]::WriteAllLines($path, $lines, (New-Object System.Text.UTF8Encoding($true)))
+}
+
+# ---------------------------------------------------------------
+Write-Host "Step 1: discovering Asian locations..."
+$locHtml = Get-Html "$root/locations?con=AS"
+if (-not $locHtml) { throw "Could not load the locations page." }
+
+$locations = [ordered]@{}
+$hits = [regex]::Matches($locHtml, 'href="' + $hostRx + '/location/([A-Za-z0-9_-]+)"')
+$usedFallback = $false
+if ($hits.Count -eq 0) {
+    $hits = [regex]::Matches($locHtml, '\\?/location\\?/([A-Za-z0-9_-]+)')
+    $usedFallback = $true
+}
+
+foreach ($h in $hits) {
+    $slug = $h.Groups[1].Value
+    if (-not $locations.Contains($slug)) { $locations[$slug] = "" }
+}
+
+$asiaNames = @('Greater Noida','Mumbai','Osaka','Yokohama','Sanya','Seoul','Sharjah','Singapore','Wuhan',
+               'Doha','Nagoya','Dubai','Guangzhou','Shanghai','Jakarta','Shenzhen','Taipei','Gandhinagar',
+               'Gujarat','Chengdu','Hangzhou','Hong Kong','Bengaluru','New Delhi','Chiba','Incheon','Bangkok',
+               'Kuala Lumpur','Abu Dhabi','Beijing')
+$asiaSlugs = $asiaNames | ForEach-Object { ($_.ToLower() -replace '[^a-z0-9]+', '-').Trim('-') }
+
+if ($locations.Count -gt 45 -or $usedFallback) {
+    $filtered = [ordered]@{}
+    foreach ($slug in @($locations.Keys)) {
+        foreach ($a in $asiaSlugs) {
+            if ($slug -eq $a -or $slug.StartsWith($a + "-")) { $filtered[$slug] = ""; break }
+        }
+    }
+    $locations = $filtered
+}
+
+if ($Only -and $Only.Count -gt 0) {
+    $keep = [ordered]@{}
+    foreach ($o in $Only) {
+        $hit = @($locations.Keys | Where-Object { $_ -ieq $o.Trim() })
+        if ($hit.Count -gt 0) { $keep[$hit[0]] = "" }
+    }
+    $locations = $keep
+}
+Write-Host "  Found $($locations.Count) location(s): $(@($locations.Keys) -join ', ')"
+if ($Only -and $Only.Count -gt 0 -and $locations.Count -eq 0) {
+    Write-Warning "None of the -Only names matched a discovered location slug. Run without -Only to see the available slugs."
+}
+
+# ---------------------------------------------------------------
+Write-Host "Step 2: collecting event links from each location..."
+$seenEvents = New-Object 'System.Collections.Generic.HashSet[string]'
+$events     = New-Object 'System.Collections.Generic.List[object]'
+
+$locIndex = 0
+foreach ($slug in @($locations.Keys)) {
+    $locIndex++
+    Write-Host ("  [{0}/{1}] {2}" -f $locIndex, $locations.Count, $slug)
+
+    $html = Get-Html "$root/location/$slug"
+    if (-not $html) {
+        Write-Host "      could not load location page" -ForegroundColor Yellow
+        continue
+    }
+
+    $linksFound = 0
+    $newEvents  = 0
+    $ignored    = 0
+    foreach ($m in [regex]::Matches($html, 'href="' + $hostRx + '/event/([^"#?/]+)"')) {
+        $ev = $m.Groups[1].Value
+        $linksFound++
+
+        # Show whether the event passes the season filter used later in Step 3
+        $sm0 = [regex]::Match($ev, '^s(\d+)-(\d{4})-')
+        $inSeason = $false
+        if ($sm0.Success) {
+            $pair0 = "{0}-{1}" -f [int]$sm0.Groups[1].Value, $sm0.Groups[2].Value
+            $inSeason = ($Seasons -contains [int]$sm0.Groups[1].Value) -or ($AcceptedSeasonYears -contains $pair0)
+        }
+
+        # With -Only, location pages may also link to events from other cities.
+        # Keep only events whose slug is s<N>-<year>-<location>...
+        if ($Only -and $Only.Count -gt 0) {
+            if ($ev -notmatch ('^s\d+-\d{4}-' + [regex]::Escape($slug) + '(-|$)')) {
+                $ignored++
+                continue
+            }
+        }
+
+        if ($seenEvents.Add($ev)) {
+            $newEvents++
+            $events.Add([pscustomobject]@{ LocationSlug = $slug; EventSlug = $ev })
+            if ($inSeason) {
+                Write-Host "      + $ev  (in selected seasons)" -ForegroundColor Green
+            } else {
+                Write-Host "      - $ev  (outside selected seasons, will be skipped)" -ForegroundColor DarkGray
+            }
+        }
+    }
+    Write-Host ("      {0} event link(s) on page, {1} new, {2} ignored (other locations)" -f $linksFound, $newEvents, $ignored)
+}
+Write-Host "  $($events.Count) unique event(s) in total."
+
+# ---------------------------------------------------------------
+$written = New-Object 'System.Collections.Generic.List[string]'
+
+foreach ($cat in $categoriesToRun) {
+    Write-Host ""
+    Write-Host "=========================================="
+    Write-Host "Scraping Category: $cat"
+    Write-Host "=========================================="
+
+    switch ($cat) {
+        'Women'          { $suffix = '-hyrox-women';             $isRelay = $false; $fileName = 'Hyrox_Asia_Women.csv' }
+        'Men'            { $suffix = '-hyrox-men';               $isRelay = $false; $fileName = 'Hyrox_Asia_Men.csv' }
+        'ProMen'         { $suffix = '-hyrox-pro-men';           $isRelay = $false; $fileName = 'Hyrox_Asia_ProMen.csv' }
+        'TeamRelayMen'   { $suffix = '-hyrox-team-relay-men';    $isRelay = $true;  $fileName = 'Hyrox_Asia_TeamRelayMen.csv' }
+        'TeamRelayMixed' { $suffix = '-hyrox-team-relay-mixed';  $isRelay = $true;  $fileName = 'Hyrox_Asia_TeamRelayMixed.csv' }
+    }
+
+    $OutFile = Join-Path $OutDir $fileName
+    $logFile = [System.IO.Path]::ChangeExtension($OutFile, $null).TrimEnd('.') + "_EventLog.csv"
+
+    $seenResults = New-Object 'System.Collections.Generic.HashSet[string]'
+    $rows        = New-Object 'System.Collections.Generic.List[object]'
+    $log         = New-Object 'System.Collections.Generic.List[object]'
+    $textInfo    = (Get-Culture).TextInfo
+
+    foreach ($e in $events) {
+        $sm = [regex]::Match($e.EventSlug, '^s(\d+)-(\d{4})-')
+        $seasonOk = $false
+        if ($sm.Success) {
+            $pair = "{0}-{1}" -f [int]$sm.Groups[1].Value, $sm.Groups[2].Value
+            $seasonOk = ($Seasons -contains [int]$sm.Groups[1].Value) -or ($AcceptedSeasonYears -contains $pair)
+        }
+        if (-not $seasonOk) { continue }
+
+        $evHtml = Get-Html "$root/event/$($e.EventSlug)"
+        if (-not $evHtml) { continue }
+
+        $rm = [regex]::Match($evHtml, "(/ranking/[A-Za-z0-9_-]*$suffix)(?![A-Za-z0-9_-])")
+        if (-not $rm.Success) {
+            $log.Add([pscustomobject]@{ Event = $e.EventSlug; Outcome = "no $cat ranking link"; Entries = 0 })
+            continue
+        }
+        $rankPath = $rm.Groups[1].Value
+
+        $sn      = [int]$sm.Groups[1].Value
+        $season  = "S$sn ({0}/{1})" -f (17 + $sn), (18 + $sn)
+        $year    = $sm.Groups[2].Value
+        $locName = $textInfo.ToTitleCase(($e.LocationSlug -replace '-', ' '))
+
+        $eventDate = ""
+        $h1 = $evHtml.IndexOf("<h1")
+        if ($h1 -ge 0) {
+            $evText = Strip-Tags $evHtml.Substring($h1) " "
+            $dm = [regex]::Match($evText, '((?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+\d{1,2}(?:\s*[\u2013-]\s*\d{1,2})?(?:,\s*\d{4})?)')
+            if ($dm.Success) { $eventDate = $dm.Groups[1].Value }
+        }
+
+        $rank = 0
+        $entriesThisEvent = 0
+        $firstRow = $rows.Count
+
+        for ($page = 1; $page -le 50; $page++) {
+            $html = Get-Html "$root$rankPath`?p=$page"
+            if (-not $html) { break }
+            Write-Host "    [$cat] $($e.EventSlug) page $page ..." -NoNewline
+            $newOnPage = 0
+
+            foreach ($tr in [regex]::Matches($html, '<tr\b[^>]*>(.*?)</tr>', 'Singleline')) {
+                $rowHtml = $tr.Groups[1].Value
+                $idm = [regex]::Match($rowHtml, 'href="' + $hostRx + '/result/([A-Za-z0-9]+)"')
+                if (-not $idm.Success) { continue }
+                $rid = $idm.Groups[1].Value
+                if (-not $seenResults.Add($rid)) { continue }
+                $newOnPage++
+
+                $names = New-Object 'System.Collections.Generic.List[string]'
+                $ctrys = New-Object 'System.Collections.Generic.List[string]'
+                $seenAth = @{}
+
+                foreach ($am in [regex]::Matches($rowHtml, '<a\b[^>]*href="' + $hostRx + '/athlete/([^"#?]+)"[^>]*>(.*?)</a>', 'Singleline')) {
+                    $aslug = $am.Groups[1].Value
+                    if ($seenAth.ContainsKey($aslug)) { continue }
+                    $seenAth[$aslug] = $true
+
+                    $name = Strip-Tags $am.Groups[2].Value
+                    $country = ""
+                    $imgs = [regex]::Matches($rowHtml.Substring(0, $am.Index), '<img\b[^>]*>')
+                    if ($imgs.Count -gt 0) {
+                        $img = $imgs[$imgs.Count - 1].Value
+                        $cm = [regex]::Match($img, '\b(?:alt|title)="([^"]+)"')
+                        if ($cm.Success) { $country = $cm.Groups[1].Value }
+                    }
+                    $names.Add($name)
+                    $ctrys.Add($country)
+                }
+
+                $text  = Strip-Tags $rowHtml " "
+                $timeM = [regex]::Match($text, '(\d{1,2}(?::\d{2}){1,2})')
+                $diffM = [regex]::Match($text, '\+\s*(\d{1,2}(?::\d{2}){1,2})')
+                $time  = if ($timeM.Success) { $timeM.Groups[1].Value } else { "" }
+                $diff  = if ($diffM.Success) { $diffM.Groups[1].Value } else { "" }
+
+                $overall = ""
+                $ag = ""
+                if ($time) { $rank++; $overall = $rank }
+
+                $teamCountries = ($ctrys | Where-Object { $_ } | Select-Object -Unique) -join "; "
+
+                $timeOut = $time
+                $diffOut = $diff
+                if (-not $PlainTimes) {
+                    if ($time) { $timeOut = '="' + $time + '"' }
+                    if ($diff) { $diffOut = '="' + $diff + '"' }
+                }
+
+                if ($isRelay) {
+                    $rows.Add([pscustomobject]@{
+                        Category      = $cat
+                        Location      = $locName
+                        Season        = $season
+                        Year          = $year
+                        EventDate     = $eventDate
+                        EventSlug     = $e.EventSlug
+                        OverallRank   = $overall
+                        AG            = $ag
+                        Time          = $timeOut
+                        GapToWinner   = $diffOut
+                        Athlete1      = if ($names.Count -ge 1) { $names[0] } else { "" }
+                        Athlete2      = if ($names.Count -ge 2) { $names[1] } else { "" }
+                        Athlete3      = if ($names.Count -ge 3) { $names[2] } else { "" }
+                        Athlete4      = if ($names.Count -ge 4) { $names[3] } else { "" }
+                        TeamCountries = $teamCountries
+                        ResultId      = $rid
+                    })
+                } else {
+                    $rows.Add([pscustomobject]@{
+                        Category    = $cat
+                        Location    = $locName
+                        Season      = $season
+                        Year        = $year
+                        EventDate   = $eventDate
+                        EventSlug   = $e.EventSlug
+                        OverallRank = $overall
+                        AG          = $ag
+                        Time        = $timeOut
+                        GapToWinner = $diffOut
+                        Athlete     = if ($names.Count -ge 1) { $names[0] } else { "" }
+                        Country     = if ($ctrys.Count -ge 1) { $ctrys[0] } else { "" }
+                        ResultId    = $rid
+                    })
+                }
+                $entriesThisEvent++
+            }
+
+            Write-Host " $newOnPage new entry/entries"
+            if ($newOnPage -eq 0) { break }
+        }
+
+        if (-not $SkipAG -and $entriesThisEvent -gt 0) {
+            $eventIds = @{}
+            for ($i = $firstRow; $i -lt $rows.Count; $i++) { $eventIds[$rows[$i].ResultId] = $true }
+
+            $ids40 = Get-AgeGroupIds $rankPath '40+'
+            $match40 = @($ids40 | Where-Object { $eventIds.ContainsKey($_) }).Count
+
+            if ($match40 -lt $entriesThisEvent) {
+                for ($i = $firstRow; $i -lt $rows.Count; $i++) {
+                    $rows[$i].AG = if ($ids40.Contains($rows[$i].ResultId)) { "40+" } else { "U40" }
+                }
+            }
+        }
+
+        $outcome = if ($entriesThisEvent -gt 0) { "scraped" } else { "no results" }
+        Write-Host ("  {0,-8} {1,-28} {2} entries" -f $outcome.Substring(0, [Math]::Min(8, $outcome.Length)), $e.EventSlug, $entriesThisEvent)
+        $log.Add([pscustomobject]@{ Event = $e.EventSlug; Outcome = $outcome; Entries = $entriesThisEvent })
+    }
+
+    if ($isRelay) {
+        $columns = 'Category','Location','Season','Year','EventDate','EventSlug','OverallRank','AG','Time','GapToWinner',
+                   'Athlete1','Athlete2','Athlete3','Athlete4','TeamCountries'
+    } else {
+        $columns = 'Category','Location','Season','Year','EventDate','EventSlug','OverallRank','AG','Time','GapToWinner',
+                   'Athlete','Country'
+    }
+
+    Export-PlainCsv $rows $columns $OutFile
+    Export-PlainCsv $log @('Event','Outcome','Entries') $logFile
+    Write-Host "Completed $cat -> saved to $OutFile"
+    $written.Add($OutFile)
+}
+
+Write-Host ""
+Write-Host "All requested categories successfully completed!"
+Write-Host ""
+Write-Host "Result files (upload these to the PWA repo):"
+foreach ($f in $written) { Write-Host "  $f" }
+Write-Host "(The *_EventLog.csv files are for debugging only; no need to upload them.)"
