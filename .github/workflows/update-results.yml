@@ -3,11 +3,32 @@ name: Run Hyrox Scraper & Update CSV
 on:
   workflow_dispatch:
     inputs:
+      category:
+        description: 'Category to scrape (All = one CSV per category)'
+        required: true
+        default: 'All'
+        type: choice
+        options:
+          - All
+          - Women
+          - Men
+          - ProMen
+          - TeamRelayMen
+          - TeamRelayMixed
       locations:
-        description: 'Location slugs separated by commas. Default is set to Bangkok, Jakarta, and Singapore.'
+        description: 'Location slugs separated by commas. Leave empty for all Asian locations.'
         required: false
         default: 'bangkok,jakarta,singapore'
         type: string
+      skip_ag:
+        description: 'Skip the 40+ age group lookup (much faster, AG column stays empty)'
+        required: false
+        default: false
+        type: boolean
+
+# Needed so the commit step can push the updated CSVs back to the repo
+permissions:
+  contents: write
 
 jobs:
   run-script:
@@ -18,20 +39,41 @@ jobs:
 
       - name: Run Hyrox Scraper Script
         shell: pwsh
+        env:
+          CATEGORY: ${{ inputs.category }}
+          LOCATIONS: ${{ inputs.locations }}
+          SKIP_AG: ${{ inputs.skip_ag }}
         run: |
-          $csvPath = Join-Path $PWD "results.csv"
-          $targetLocations = "${{ inputs.locations }}"
-          
-          if (-not [string]::IsNullOrWhiteSpace($targetLocations)) {
-              Write-Host "Running script for specific locations: $targetLocations"
-              ./Get-HyroxAsiaRelayMen.ps1 -OutFile $csvPath -Only $targetLocations.Split(',')
+          # CSVs are written to the repo root, next to index.html
+          $params = @{ Category = $env:CATEGORY; OutDir = $PWD.Path }
+
+          if (-not [string]::IsNullOrWhiteSpace($env:LOCATIONS)) {
+              $params.Only = @($env:LOCATIONS.Split(',') | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+              Write-Host "Running $($env:CATEGORY) for locations: $($params.Only -join ', ')"
           } else {
-              Write-Host "Running script for all Asian locations..."
-              ./Get-HyroxAsiaRelayMen.ps1 -OutFile $csvPath
+              Write-Host "Running $($env:CATEGORY) for all Asian locations..."
           }
+
+          if ($env:SKIP_AG -eq 'true') { $params.SkipAG = $true }
+
+          ./Scrape-HyroxAsia.ps1 @params
+
+      # Keep the per-event debug logs as a downloadable artifact instead of committing them
+      - name: Upload event logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hyrox-event-logs
+          path: Hyrox_Asia_*_EventLog.csv
+          if-no-files-found: ignore
+
+      - name: Remove event logs before commit
+        if: always()
+        shell: pwsh
+        run: Remove-Item "Hyrox_Asia_*_EventLog.csv" -ErrorAction SilentlyContinue
 
       - name: Commit and Push Changes
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "Auto-update Hyrox race results for Bangkok, Jakarta, Singapore"
-          file_pattern: "results.csv"
+          commit_message: "Auto-update Hyrox race results (${{ inputs.category }}: ${{ inputs.locations || 'all locations' }})"
+          file_pattern: "Hyrox_Asia_*.csv"
