@@ -16,9 +16,9 @@ on:
           - TeamRelayMen
           - TeamRelayMixed
       locations:
-        description: 'Location slugs separated by commas. Leave empty for all Asian locations.'
+        description: 'Location slugs separated by commas. Leave empty for all Asian locations. e.g for selection locations bangkok,jakarta,singapore.'
         required: false
-        default: 'bangkok,jakarta,singapore'
+        default: ''
         type: string
 
 # Needed so the commit step can push the updated CSVs back to the repo
