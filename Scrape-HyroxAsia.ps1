@@ -1,6 +1,6 @@
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet('Women', 'Men', 'ProMen', 'TeamRelayMen', 'TeamRelayMixed', 'All')]
+    [ValidateSet('Women', 'Men', 'ProMen', 'DoublesMen', 'DoublesMenPro', 'DoublesWomen', 'DoublesMixed', 'TeamRelayMen', 'TeamRelayMixed', 'All')]
     [string]$Category,
 
     [string]$OutDir = "",
@@ -29,7 +29,7 @@ if (-not $OutDir) {
 if (-not (Test-Path $OutDir)) { New-Item -ItemType Directory -Path $OutDir -Force | Out-Null }
 
 $categoriesToRun = if ($Category -eq 'All') {
-    @('Women', 'Men', 'ProMen', 'TeamRelayMen', 'TeamRelayMixed')
+    @('Women', 'Men', 'ProMen', 'DoublesMen', 'DoublesMenPro', 'DoublesWomen', 'DoublesMixed', 'TeamRelayMen', 'TeamRelayMixed')
 } else {
     @($Category)
 }
@@ -224,12 +224,17 @@ foreach ($cat in $categoriesToRun) {
     Write-Host "Scraping Category: $cat"
     Write-Host "=========================================="
 
+    # $layout decides which columns the CSV gets: solo (1 athlete), doubles (2 athletes), relay (up to 4)
     switch ($cat) {
-        'Women'          { $suffix = '-hyrox-women';             $isRelay = $false; $fileName = 'Hyrox_Asia_Women.csv' }
-        'Men'            { $suffix = '-hyrox-men';               $isRelay = $false; $fileName = 'Hyrox_Asia_Men.csv' }
-        'ProMen'         { $suffix = '-hyrox-pro-men';           $isRelay = $false; $fileName = 'Hyrox_Asia_ProMen.csv' }
-        'TeamRelayMen'   { $suffix = '-hyrox-team-relay-men';    $isRelay = $true;  $fileName = 'Hyrox_Asia_TeamRelayMen.csv' }
-        'TeamRelayMixed' { $suffix = '-hyrox-team-relay-mixed';  $isRelay = $true;  $fileName = 'Hyrox_Asia_TeamRelayMixed.csv' }
+        'Women'          { $suffix = '-hyrox-women';              $layout = 'solo';    $fileName = 'Hyrox_Asia_Women.csv' }
+        'Men'            { $suffix = '-hyrox-men';                $layout = 'solo';    $fileName = 'Hyrox_Asia_Men.csv' }
+        'ProMen'         { $suffix = '-hyrox-pro-men';            $layout = 'solo';    $fileName = 'Hyrox_Asia_ProMen.csv' }
+        'DoublesMen'     { $suffix = '-hyrox-doubles-men';        $layout = 'doubles'; $fileName = 'Hyrox_Asia_DoublesMen.csv' }
+        'DoublesMenPro'  { $suffix = '-hyrox-pro-doubles-men';    $layout = 'doubles'; $fileName = 'Hyrox_Asia_DoublesMenPro.csv' }
+        'DoublesWomen'   { $suffix = '-hyrox-doubles-women';      $layout = 'doubles'; $fileName = 'Hyrox_Asia_DoublesWomen.csv' }
+        'DoublesMixed'   { $suffix = '-hyrox-doubles-mixed';      $layout = 'doubles'; $fileName = 'Hyrox_Asia_DoublesMixed.csv' }
+        'TeamRelayMen'   { $suffix = '-hyrox-team-relay-men';     $layout = 'relay';   $fileName = 'Hyrox_Asia_TeamRelayMen.csv' }
+        'TeamRelayMixed' { $suffix = '-hyrox-team-relay-mixed';   $layout = 'relay';   $fileName = 'Hyrox_Asia_TeamRelayMixed.csv' }
     }
 
     $OutFile = Join-Path $OutDir $fileName
@@ -335,7 +340,7 @@ foreach ($cat in $categoriesToRun) {
                     if ($diff) { $diffOut = '="' + $diff + '"' }
                 }
 
-                if ($isRelay) {
+                if ($layout -eq 'relay') {
                     $rows.Add([pscustomobject]@{
                         Category      = $cat
                         Location      = $locName
@@ -353,6 +358,24 @@ foreach ($cat in $categoriesToRun) {
                         Athlete4      = if ($names.Count -ge 4) { $names[3] } else { "" }
                         TeamCountries = $teamCountries
                         ResultId      = $rid
+                    })
+                } elseif ($layout -eq 'doubles') {
+                    $rows.Add([pscustomobject]@{
+                        Category    = $cat
+                        Location    = $locName
+                        Season      = $season
+                        Year        = $year
+                        EventDate   = $eventDate
+                        EventSlug   = $e.EventSlug
+                        OverallRank = $overall
+                        AG          = $ag
+                        Time        = $timeOut
+                        GapToWinner = $diffOut
+                        Athlete1    = if ($names.Count -ge 1) { $names[0] } else { "" }
+                        Country1    = if ($ctrys.Count -ge 1) { $ctrys[0] } else { "" }
+                        Athlete2    = if ($names.Count -ge 2) { $names[1] } else { "" }
+                        Country2    = if ($ctrys.Count -ge 2) { $ctrys[1] } else { "" }
+                        ResultId    = $rid
                     })
                 } else {
                     $rows.Add([pscustomobject]@{
@@ -393,9 +416,12 @@ foreach ($cat in $categoriesToRun) {
         if ($entriesThisEvent -gt 0 -and $EventPauseSec -gt 0 -and -not $script:abort) { Start-Sleep -Seconds $EventPauseSec }
     }
 
-    if ($isRelay) {
+    if ($layout -eq 'relay') {
         $columns = 'Category','Location','Season','Year','EventDate','EventSlug','OverallRank','AG','Time','GapToWinner',
                    'Athlete1','Athlete2','Athlete3','Athlete4','TeamCountries'
+    } elseif ($layout -eq 'doubles') {
+        $columns = 'Category','Location','Season','Year','EventDate','EventSlug','OverallRank','AG','Time','GapToWinner',
+                   'Athlete1','Country1','Athlete2','Country2'
     } else {
         $columns = 'Category','Location','Season','Year','EventDate','EventSlug','OverallRank','AG','Time','GapToWinner',
                    'Athlete','Country'
