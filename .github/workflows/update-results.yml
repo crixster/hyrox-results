@@ -3,27 +3,25 @@ name: Run Hyrox Scraper & Update CSV
 on:
   workflow_dispatch:
     inputs:
-      category:
-        description: 'Category to scrape (All = one CSV per category)'
+      categories:
+        description: 'Comma-separated, or All. Options: Women, Men, ProMen, DoublesMen, DoublesMenPro, DoublesWomen, DoublesMixed, TeamRelayMen, TeamRelayMixed'
         required: true
         default: 'All'
-        type: choice
-        options:
-          - All
-          - Women
-          - Men
-          - ProMen
-          - TeamRelayMen
-          - TeamRelayMixed
+        type: string
       locations:
-        description: 'Location slugs separated by commas. Leave empty for all Asian locations. e.g for selection locations bangkok,jakarta,singapore.'
-        required: false
-        default: ''
+        description: 'Comma-separated location slugs, or All. Use hyphens for multi-word names, e.g. singapore,jakarta,kuala-lumpur'
+        required: true
+        default: 'All'
         type: string
 
 # Needed so the commit step can push the updated CSVs back to the repo
 permissions:
   contents: write
+
+# Never run two scrapes at once: they would both try to push the same CSV files
+concurrency:
+  group: hyrox-scraper
+  cancel-in-progress: false
 
 jobs:
   run-script:
@@ -35,17 +33,23 @@ jobs:
       - name: Run Hyrox Scraper Script
         shell: pwsh
         env:
-          CATEGORY: ${{ inputs.category }}
+          CATEGORIES: ${{ inputs.categories }}
           LOCATIONS: ${{ inputs.locations }}
         run: |
           # CSVs are written to the repo root, next to index.html
-          $params = @{ Category = $env:CATEGORY; OutDir = $PWD.Path }
+          # (an empty value counts as All; casting to [string] avoids a $null env var)
+          $cats = @(([string]$env:CATEGORIES).Split(',') | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+          if ($cats.Count -eq 0) { $cats = @('All') }
 
-          if (-not [string]::IsNullOrWhiteSpace($env:LOCATIONS)) {
-              $params.Only = @($env:LOCATIONS.Split(',') | ForEach-Object { $_.Trim() } | Where-Object { $_ })
-              Write-Host "Running $($env:CATEGORY) for locations: $($params.Only -join ', ')"
+          $locs = @(([string]$env:LOCATIONS).Split(',') | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+
+          $params = @{ Category = $cats; OutDir = $PWD.Path }
+
+          if ($locs.Count -gt 0 -and $locs -notcontains 'All') {
+              $params.Only = $locs
+              Write-Host "Categories: $($cats -join ', ') | Locations: $($locs -join ', ')"
           } else {
-              Write-Host "Running $($env:CATEGORY) for all Asian locations..."
+              Write-Host "Categories: $($cats -join ', ') | Locations: all Asian locations"
           }
 
           ./Scrape-HyroxAsia.ps1 @params
@@ -67,5 +71,5 @@ jobs:
       - name: Commit and Push Changes
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "Auto-update Hyrox race results (${{ inputs.category }}: ${{ inputs.locations || 'all locations' }})"
+          commit_message: "Auto-update Hyrox race results (${{ inputs.categories }}: ${{ inputs.locations }})"
           file_pattern: "Hyrox_Asia_*.csv"
