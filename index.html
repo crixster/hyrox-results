@@ -162,11 +162,15 @@
         const PAGE_SIZE = 250;
 
         const CATEGORIES = [
-            { key: 'women',      label: 'Women',            file: 'Hyrox_Asia_Women.csv',           relay: false },
-            { key: 'men',        label: 'Men',              file: 'Hyrox_Asia_Men.csv',             relay: false },
-            { key: 'promen',     label: 'Pro Men',          file: 'Hyrox_Asia_ProMen.csv',          relay: false },
-            { key: 'relaymen',   label: 'Team Relay Men',   file: 'Hyrox_Asia_TeamRelayMen.csv',    relay: true, fallback: 'results.csv' },
-            { key: 'relaymixed', label: 'Team Relay Mixed', file: 'Hyrox_Asia_TeamRelayMixed.csv',  relay: true }
+            { key: 'women',         label: 'Women',            file: 'Hyrox_Asia_Women.csv',           layout: 'solo' },
+            { key: 'men',           label: 'Men',              file: 'Hyrox_Asia_Men.csv',             layout: 'solo' },
+            { key: 'promen',        label: 'Pro Men',          file: 'Hyrox_Asia_ProMen.csv',          layout: 'solo' },
+            { key: 'doublesmen',    label: 'Men Doubles',      file: 'Hyrox_Asia_DoublesMen.csv',      layout: 'doubles' },
+            { key: 'doublesmenpro', label: 'Men Doubles Pro',  file: 'Hyrox_Asia_DoublesMenPro.csv',   layout: 'doubles' },
+            { key: 'doubleswomen',  label: 'Women Doubles',    file: 'Hyrox_Asia_DoublesWomen.csv',    layout: 'doubles' },
+            { key: 'doublesmixed',  label: 'Mixed Doubles',    file: 'Hyrox_Asia_DoublesMixed.csv',    layout: 'doubles' },
+            { key: 'relaymen',      label: 'Team Relay Men',   file: 'Hyrox_Asia_TeamRelayMen.csv',    layout: 'relay', fallback: 'results.csv' },
+            { key: 'relaymixed',    label: 'Team Relay Mixed', file: 'Hyrox_Asia_TeamRelayMixed.csv',  layout: 'relay' }
         ];
 
         const COLUMNS_SOLO = [
@@ -187,6 +191,17 @@
             { label: 'Athletes' },
             { label: 'Team Countries', sortKey: 'TeamCountries' }
         ];
+        const COLUMNS_DOUBLES = [
+            { label: 'Rank',      sortKey: 'OverallRank' },
+            { label: 'Location',  sortKey: 'Location' },
+            { label: 'Season',    sortKey: 'Season' },
+            { label: 'AG',        sortKey: 'AG' },
+            { label: 'Time',      sortKey: 'Time' },
+            { label: 'Athlete 1', sortKey: 'Athlete1' },
+            { label: 'Athlete 2', sortKey: 'Athlete2' },
+            { label: 'Country',   sortKey: 'Country1' }
+        ];
+        const COLUMNS_BY_LAYOUT = { solo: COLUMNS_SOLO, doubles: COLUMNS_DOUBLES, relay: COLUMNS_RELAY };
 
         const datasets = {};
         let currentCategory = null;
@@ -297,7 +312,7 @@
             document.getElementById('page-subtitle').textContent = cat.label;
             document.getElementById('table-title').textContent = `${cat.label} Results`;
             document.getElementById('search-label').textContent =
-                cat.relay ? 'Search Athlete / Team Country' : 'Search Athlete / Country';
+                cat.layout === 'relay' ? 'Search Athlete / Team Country' : 'Search Athlete / Country';
             renderNav();
             resetFilterControls();
 
@@ -390,7 +405,7 @@
         }
 
         function renderHeader() {
-            const columns = currentCategory.relay ? COLUMNS_RELAY : COLUMNS_SOLO;
+            const columns = COLUMNS_BY_LAYOUT[currentCategory.layout];
             document.getElementById('results-thead').innerHTML = `
                 <tr class="bg-gray-950 text-gray-400 text-[11px] sm:text-xs uppercase tracking-wider border-b border-gray-800 select-none">
                     ${columns.map(col => {
@@ -404,11 +419,20 @@
 
         function rowHtml(item) {
             const time = (item.Time || '-').replace(/^=\s*"/, '').replace(/"/g, '');
-            const who = currentCategory.relay
-                ? `<td class="py-3 px-3 sm:px-4 text-xs text-gray-300">${escapeHtml([item.Athlete1, item.Athlete2, item.Athlete3, item.Athlete4].filter(Boolean).join(', '))}</td>
-                   <td class="py-3 px-3 sm:px-4 text-xs text-gray-400">${escapeHtml(item.TeamCountries || '-')}</td>`
-                : `<td class="py-3 px-3 sm:px-4 text-gray-200">${escapeHtml(item.Athlete || '-')}</td>
+            let who;
+            if (currentCategory.layout === 'relay') {
+                who = `<td class="py-3 px-3 sm:px-4 text-xs text-gray-300">${escapeHtml([item.Athlete1, item.Athlete2, item.Athlete3, item.Athlete4].filter(Boolean).join(', '))}</td>
+                   <td class="py-3 px-3 sm:px-4 text-xs text-gray-400">${escapeHtml(item.TeamCountries || '-')}</td>`;
+            } else if (currentCategory.layout === 'doubles') {
+                const c1 = item.Country1 || '', c2 = item.Country2 || '';
+                const countries = (c1 && c2 && c1 !== c2) ? `${c1} / ${c2}` : (c1 || c2 || '-');
+                who = `<td class="py-3 px-3 sm:px-4 text-gray-200">${escapeHtml(item.Athlete1 || '-')}</td>
+                   <td class="py-3 px-3 sm:px-4 text-gray-200">${escapeHtml(item.Athlete2 || '-')}</td>
+                   <td class="py-3 px-3 sm:px-4 text-xs text-gray-400">${escapeHtml(countries)}</td>`;
+            } else {
+                who = `<td class="py-3 px-3 sm:px-4 text-gray-200">${escapeHtml(item.Athlete || '-')}</td>
                    <td class="py-3 px-3 sm:px-4 text-xs text-gray-400">${escapeHtml(item.Country || '-')}</td>`;
+            }
             return `
                 <tr class="hover:bg-gray-900/50 transition">
                     <td class="py-3 px-3 sm:px-4 font-semibold text-hyrox-500">${escapeHtml(item.OverallRank || '-')}</td>
@@ -428,9 +452,11 @@
             const selectedSeasons = getSelectedValues(document.getElementById('filter-season'));
             const selectedAgs = getSelectedValues(document.getElementById('filter-ag'));
 
-            const searchFields = currentCategory.relay
-                ? ['Athlete1', 'Athlete2', 'Athlete3', 'Athlete4', 'TeamCountries', 'Location']
-                : ['Athlete', 'Country', 'Location'];
+            const searchFields = {
+                solo:    ['Athlete', 'Country', 'Location'],
+                doubles: ['Athlete1', 'Athlete2', 'Country1', 'Country2', 'Location'],
+                relay:   ['Athlete1', 'Athlete2', 'Athlete3', 'Athlete4', 'TeamCountries', 'Location']
+            }[currentCategory.layout];
 
             let filtered = currentDataset.filter(item => {
                 const matchSearch = !searchQuery ||
@@ -480,7 +506,7 @@
             renderHeader();
             document.getElementById('results-tbody').innerHTML =
                 filtered.slice(0, visibleLimit).map(rowHtml).join('') ||
-                `<tr><td colspan="7" class="text-center py-8 text-gray-500">No race results found.</td></tr>`;
+                `<tr><td colspan="${COLUMNS_BY_LAYOUT[currentCategory.layout].length}" class="text-center py-8 text-gray-500">No race results found.</td></tr>`;
             document.getElementById('show-more-wrap').classList.toggle('hidden', count <= shown);
         }
 
