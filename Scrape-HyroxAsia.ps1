@@ -1,7 +1,7 @@
 param(
     [Parameter(Mandatory = $true)]
     [ValidateSet('Women', 'Men', 'ProMen', 'DoublesMen', 'DoublesMenPro', 'DoublesWomen', 'DoublesMixed', 'TeamRelayMen', 'TeamRelayMixed', 'All')]
-    [string]$Category,
+    [string[]]$Category,            # one or more names (e.g. Women,DoublesMen) or All
 
     [string]$OutDir = "",
     [string[]]$Only = @(),
@@ -28,10 +28,11 @@ if (-not $OutDir) {
 }
 if (-not (Test-Path $OutDir)) { New-Item -ItemType Directory -Path $OutDir -Force | Out-Null }
 
-$categoriesToRun = if ($Category -eq 'All') {
-    @('Women', 'Men', 'ProMen', 'DoublesMen', 'DoublesMenPro', 'DoublesWomen', 'DoublesMixed', 'TeamRelayMen', 'TeamRelayMixed')
+$allCategories = @('Women', 'Men', 'ProMen', 'DoublesMen', 'DoublesMenPro', 'DoublesWomen', 'DoublesMixed', 'TeamRelayMen', 'TeamRelayMixed')
+$categoriesToRun = if ($Category -contains 'All') {
+    $allCategories
 } else {
-    @($Category)
+    @($allCategories | Where-Object { $Category -contains $_ })
 }
 
 $script:abort = $false
