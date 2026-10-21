@@ -45,6 +45,15 @@
             </button>
         </div>
     </div>
+<div id="pwaInstallContainer" class="hidden mt-3 flex justify-center">
+  <button
+    id="pwaInstallBtn"
+    class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-md transition"
+  >
+    📲 Install App
+  </button>
+</div>
+    
     <!-- Category pages (built by JS) -->
     <nav id="category-nav" class="max-w-7xl mx-auto px-4 py-2 flex gap-2 overflow-x-auto scrollbar-none" aria-label="Categories"></nav>
 </header>
@@ -558,5 +567,6 @@
 
         openCategory(getCategoryFromHash());
     </script>
+    <script src="install-pwa.js"></script>
 </body>
 </html>
