@@ -1,7 +1,9 @@
 {
   "name": "Hyrox Asia Results Explorer",
+  "id": "/hyrox-results/",
   "short_name": "Hyrox Asia",
-  "start_url": "index.html",
+  "start_url": "/hyrox-results/",
+  "scope": "/hyrox-results/",
   "display": "standalone",
   "background_color": "#030712",
   "theme_color": "#ff6600",
