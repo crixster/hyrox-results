@@ -6,7 +6,7 @@
   "scope": "/hyrox-results/",
   "display": "standalone",
   "background_color": "#030712",
-  "theme_color": "#ff6600",
+  "theme_color": "#030712",
   "description": "Browse Hyrox Asia results by category (Women, Men, Pro Men, Team Relay) and calculate race stats instantly.",
   "icons": [
     {
