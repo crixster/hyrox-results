@@ -1,6 +1,6 @@
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet('Women', 'Men', 'ProMen', 'DoublesMen', 'DoublesMenPro', 'DoublesWomen', 'DoublesMixed', 'TeamRelayMen', 'TeamRelayMixed', 'All')]
+    [ValidateSet('Women', 'Men', 'ProMen', 'ProWomen', 'DoublesMen', 'DoublesMenPro', 'DoublesWomen', 'DoublesWomenPro', 'DoublesMixed', 'TeamRelayMen', 'TeamRelayMixed', 'All')]
     [string[]]$Category,            # one or more names (e.g. Women,DoublesMen) or All
 
     [string]$OutDir = "",
@@ -28,7 +28,7 @@ if (-not $OutDir) {
 }
 if (-not (Test-Path $OutDir)) { New-Item -ItemType Directory -Path $OutDir -Force | Out-Null }
 
-$allCategories = @('Women', 'Men', 'ProMen', 'DoublesMen', 'DoublesMenPro', 'DoublesWomen', 'DoublesMixed', 'TeamRelayMen', 'TeamRelayMixed')
+$allCategories = @('Women', 'Men', 'ProMen', 'ProWomen', 'DoublesMen', 'DoublesMenPro', 'DoublesWomen', 'DoublesWomenPro', 'DoublesMixed', 'TeamRelayMen', 'TeamRelayMixed')
 $categoriesToRun = if ($Category -contains 'All') {
     $allCategories
 } else {
@@ -230,10 +230,15 @@ foreach ($cat in $categoriesToRun) {
         'Women'          { $suffix = '-hyrox-women';              $layout = 'solo';    $fileName = 'Hyrox_Asia_Women.csv' }
         'Men'            { $suffix = '-hyrox-men';                $layout = 'solo';    $fileName = 'Hyrox_Asia_Men.csv' }
         'ProMen'         { $suffix = '-hyrox-pro-men';            $layout = 'solo';    $fileName = 'Hyrox_Asia_ProMen.csv' }
+        'ProWomen'        { $suffix = '-hyrox-pro-women';           $layout = 'solo';    $fileName = 'Hyrox_Asia_ProWomen.csv' }
+        
         'DoublesMen'     { $suffix = '-hyrox-doubles-men';        $layout = 'doubles'; $fileName = 'Hyrox_Asia_DoublesMen.csv' }
-        'DoublesMenPro'  { $suffix = '-hyrox-pro-doubles-men';    $layout = 'doubles'; $fileName = 'Hyrox_Asia_DoublesMenPro.csv' }
         'DoublesWomen'   { $suffix = '-hyrox-doubles-women';      $layout = 'doubles'; $fileName = 'Hyrox_Asia_DoublesWomen.csv' }
         'DoublesMixed'   { $suffix = '-hyrox-doubles-mixed';      $layout = 'doubles'; $fileName = 'Hyrox_Asia_DoublesMixed.csv' }
+        'DoublesMenPro'  { $suffix = '-hyrox-pro-doubles-men';    $layout = 'doubles'; $fileName = 'Hyrox_Asia_DoublesMenPro.csv' }
+        'DoublesWomenPro' { $suffix = '-hyrox-pro-doubles-women';   $layout = 'doubles'; $fileName = 'Hyrox_Asia_DoublesWomenPro.csv' }
+        
+        
         'TeamRelayMen'   { $suffix = '-hyrox-team-relay-men';     $layout = 'relay';   $fileName = 'Hyrox_Asia_TeamRelayMen.csv' }
         'TeamRelayMixed' { $suffix = '-hyrox-team-relay-mixed';   $layout = 'relay';   $fileName = 'Hyrox_Asia_TeamRelayMixed.csv' }
     }
