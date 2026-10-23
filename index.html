@@ -115,7 +115,7 @@
         <input type="text" id="search-input" placeholder="e.g. Lim, Zaid..." class="w-full bg-gray-950 border border-gray-800 rounded-lg px-3 py-2.5 sm:py-2 text-sm text-white focus:outline-none focus:border-hyrox-500">
     </div>
     <div>
-        <label class="block text-xs font-medium text-gray-400 mb-1">Country (Multi-select)</label>
+        <label class="block text-xs font-medium text-gray-400 mb-1">Athlete's Country (Multi-select)</label>
         <div id="filter-country-chips" class="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto p-2 bg-gray-950 border border-gray-800 rounded-lg"></div>
         <select id="filter-country" multiple class="hidden"></select>
     </div>
@@ -600,8 +600,8 @@ function initFilters(data) {
         document.getElementById('reset-btn').addEventListener('click', () => {
             resetFilterControls();
             filterAndRender();
-        document.getElementById('best-only').addEventListener('change', rerender);
         });
+            document.getElementById('best-only').addEventListener('change', rerender);
 
         
 
