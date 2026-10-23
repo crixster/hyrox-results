@@ -1,5 +1,5 @@
-const CACHE_NAME = 'hyrox-pwa-v2';
-const DATA_CACHE = 'hyrox-data-v1';
+const CACHE_NAME = 'hyrox-pwa-v3';
+const DATA_CACHE = 'hyrox-data-v3';
 const ASSETS = [
   'index.html',
   'manifest.json',
