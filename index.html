@@ -170,17 +170,19 @@
         const GITHUB_BASE_URL = 'https://raw.githubusercontent.com/crixster/hyrox-results/main/';
         const PAGE_SIZE = 250;
 
-        const CATEGORIES = [
-            { key: 'women',         label: 'Women',            file: 'Hyrox_Asia_Women.csv',           layout: 'solo' },
-            { key: 'men',           label: 'Men',              file: 'Hyrox_Asia_Men.csv',             layout: 'solo' },
-            { key: 'promen',        label: 'Pro Men',          file: 'Hyrox_Asia_ProMen.csv',          layout: 'solo' },
-            { key: 'doublesmen',    label: 'Men Doubles',      file: 'Hyrox_Asia_DoublesMen.csv',      layout: 'doubles' },
-            { key: 'doublesmenpro', label: 'Men Doubles Pro',  file: 'Hyrox_Asia_DoublesMenPro.csv',   layout: 'doubles' },
-            { key: 'doubleswomen',  label: 'Women Doubles',    file: 'Hyrox_Asia_DoublesWomen.csv',    layout: 'doubles' },
-            { key: 'doublesmixed',  label: 'Mixed Doubles',    file: 'Hyrox_Asia_DoublesMixed.csv',    layout: 'doubles' },
-            { key: 'relaymen',      label: 'Team Relay Men',   file: 'Hyrox_Asia_TeamRelayMen.csv',    layout: 'relay', fallback: 'results.csv' },
-            { key: 'relaymixed',    label: 'Team Relay Mixed', file: 'Hyrox_Asia_TeamRelayMixed.csv',  layout: 'relay' }
-        ];
+const CATEGORIES = [
+    { key: 'women',           label: 'Women',              file: 'Hyrox_Asia_Women.csv',            layout: 'solo' },
+    { key: 'men',             label: 'Men',                file: 'Hyrox_Asia_Men.csv',              layout: 'solo' },
+    { key: 'promen',          label: 'Pro Men',            file: 'Hyrox_Asia_ProMen.csv',           layout: 'solo' },
+    { key: 'prowomen',        label: 'Pro Women',          file: 'Hyrox_Asia_ProWomen.csv',         layout: 'solo' },
+    { key: 'doublesmen',      label: 'Men Doubles',        file: 'Hyrox_Asia_DoublesMen.csv',       layout: 'doubles' },
+    { key: 'doublesmenpro',   label: 'Men Doubles Pro',    file: 'Hyrox_Asia_DoublesMenPro.csv',    layout: 'doubles' },
+    { key: 'doubleswomen',    label: 'Women Doubles',      file: 'Hyrox_Asia_DoublesWomen.csv',     layout: 'doubles' },
+    { key: 'doubleswomenpro', label: 'Women Doubles Pro',  file: 'Hyrox_Asia_DoublesWomenPro.csv',  layout: 'doubles' },
+    { key: 'doublesmixed',    label: 'Mixed Doubles',      file: 'Hyrox_Asia_DoublesMixed.csv',     layout: 'doubles' },
+    { key: 'relaymen',        label: 'Team Relay Men',     file: 'Hyrox_Asia_TeamRelayMen.csv',     layout: 'relay', fallback: 'results.csv' },
+    { key: 'relaymixed',      label: 'Team Relay Mixed',   file: 'Hyrox_Asia_TeamRelayMixed.csv',   layout: 'relay' }
+];
 
         const COLUMNS_SOLO = [
             { label: 'Rank',     sortKey: 'OverallRank' },
