@@ -370,7 +370,10 @@
         const card = (f) => `
             <details class="group bg-gray-950 border border-gray-800 rounded-lg sm:flex-1" ${desktop ? 'open' : ''}>
                 <summary class="flex items-center justify-between gap-2 px-3 py-3 sm:py-2.5 cursor-pointer select-none sm:cursor-default list-none [&::-webkit-details-marker]:hidden">
-                    <span class="text-sm font-medium text-gray-200">${f.label}</span>
+                    <span class="min-w-0">
+                        <span class="block text-sm font-medium text-gray-200">${f.label}</span>
+                        <span class="block text-[11px] text-yellow-400/80 sm:hidden group-open:hidden">Tap to expand</span>
+                    </span>
                     <span class="flex items-center gap-2 min-w-0">
                         <button type="button" id="${f.id}-clear" class="hidden text-xs text-hyrox-500 font-medium px-1.5 py-0.5 rounded hover:underline">Clear</button>
                         <span id="${f.id}-sum" class="text-xs text-gray-500 truncate max-w-[9rem]">Showing all</span>
