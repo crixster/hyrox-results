@@ -7,80 +7,42 @@
     <meta name="theme-color" content="#030712">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-192.png">
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-<script>
-    tailwind.config = {
-        theme: {
-            extend: {
-                colors: {
-                    hyrox: { 500: '#facc15', 600: '#eab308', 900: '#1a1a1a' } // Yellow theme
-                }
-            }
-        }
-    }
-</script>
+    <script>
+        tailwind.config = { theme: { extend: { colors: { hyrox: { 500: '#facc15', 600: '#eab308', 900: '#1a1a1a' } } } } }
+    </script>
 </head>
 <body class="bg-gray-950 text-gray-100 min-h-screen font-sans antialiased">
-<!-- Header -->
 <header class="bg-gray-900 border-b border-gray-800 sticky top-0 z-30 shadow-md">
     <div class="max-w-7xl mx-auto px-4 py-3 sm:py-4 flex flex-col sm:flex-row justify-between items-center gap-3">
-
-    <!-- Logo / Title -->
-    <div class="flex items-center justify-between w-full sm:w-auto">
-        <div class="flex items-center space-x-3">
-            <div class="bg-yellow-400 text-black font-extrabold px-3 py-1.5 rounded text-base sm:text-lg tracking-wider">
-                HYROX
+        <div class="flex items-center justify-between w-full sm:w-auto">
+            <div class="flex items-center space-x-3">
+                <div class="bg-yellow-400 text-black font-extrabold px-3 py-1.5 rounded text-base sm:text-lg tracking-wider">HYROX</div>
+                <div>
+                    <h1 class="text-lg sm:text-xl font-bold tracking-tight">Asia Results</h1>
+                    <p id="page-subtitle" class="text-xs text-gray-400"></p>
+                </div>
             </div>
-            <div>
-                <h1 class="text-lg sm:text-xl font-bold tracking-tight">
-                    Asia Results
-                </h1>
-                <p id="page-subtitle" class="text-xs text-gray-400"></p>
-            </div>
-        </div>
-
-        <!-- Mobile Filter Toggle -->
-        <button id="mobile-filter-toggle"
-            class="sm:hidden bg-gray-800 hover:bg-gray-700 text-hyrox-500 p-2 rounded-lg border border-gray-700 flex items-center gap-1.5 text-xs font-semibold">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z">
-                </path>
-            </svg>
-            Filters
-        </button>
-    </div>
-
-    <!-- RIGHT SIDE BUTTONS -->
-    <div class="flex items-center gap-3">
-
-
-        <div id="pwaInstallContainer" class="hidden">
-            <button id="pwaInstallBtn"
-                class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium rounded-lg border border-emerald-700 transition whitespace-nowrap">
-                📲 Install App
+            <button id="mobile-filter-toggle" class="sm:hidden bg-gray-800 hover:bg-gray-700 text-hyrox-500 px-3 py-2 rounded-lg border border-gray-700 flex items-center gap-1.5 text-sm font-semibold">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+                Filters
+                <span id="filter-badge" class="hidden bg-yellow-400 text-black rounded-full text-[11px] font-bold px-1.5 min-w-[1.25rem] text-center"></span>
             </button>
         </div>
-
-       <button id="reset-btn"
-        class="hidden sm:inline-block bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm font-medium px-4 py-2 rounded-lg border border-gray-700 transition">
-        Reset Filters
-    </button>
-
+        <div class="flex items-center gap-3">
+            <div id="pwaInstallContainer" class="hidden">
+                <button id="pwaInstallBtn" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium rounded-lg border border-emerald-700 transition whitespace-nowrap">📲 Install App</button>
+            </div>
+            <button id="reset-btn" class="hidden sm:inline-block bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm font-medium px-4 py-2 rounded-lg border border-gray-700 transition">Reset Filters</button>
+        </div>
     </div>
-
-</div>
-    
-    <!-- Category pages (built by JS) -->
     <nav id="category-nav" class="max-w-7xl mx-auto px-4 py-2 flex gap-2 overflow-x-auto scrollbar-none" aria-label="Categories"></nav>
 </header>
 
-    <main class="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
-        <!-- Loading / error message -->
-        <div id="status" class="hidden bg-gray-900 border border-gray-800 rounded-xl p-6 text-sm text-gray-300"></div>
+<main class="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
+    <div id="status" class="hidden bg-gray-900 border border-gray-800 rounded-xl p-6 text-sm text-gray-300"></div>
 
-        <div id="content" class="space-y-4 sm:space-y-6">
+    <div id="content" class="space-y-4 sm:space-y-6">
         <!-- KPI Cards -->
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <div class="bg-gray-900 border border-gray-800 rounded-xl p-3.5 sm:p-5 shadow-sm flex items-center justify-between">
@@ -121,49 +83,40 @@
             </div>
         </div>
 
-        <!-- Filters Section -->
-        <div id="filters-container" class="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-5 shadow-sm space-y-4 hidden sm:block">
-            <div class="flex justify-between items-center">
-                <h2 class="text-sm font-semibold uppercase tracking-wider text-gray-400">Multi-Filter Controls</h2>
-                <button id="mobile-reset-btn" class="sm:hidden text-xs text-hyrox-500 font-medium">Reset All</button>
+        <!-- Filters: bottom sheet on mobile, inline panel on desktop -->
+        <div id="sheet-backdrop" class="hidden fixed inset-0 bg-black/60 z-40 sm:hidden"></div>
+        <section id="filters-container" role="dialog" aria-label="Filters" class="hidden sm:block fixed inset-x-0 bottom-0 z-50 bg-gray-900 border-t border-gray-700 rounded-t-2xl shadow-2xl sm:static sm:z-auto sm:rounded-xl sm:border sm:border-gray-800 sm:shadow-sm">
+            <div class="sm:hidden w-10 h-1 bg-gray-700 rounded-full mx-auto mt-2"></div>
+            <div class="flex items-center justify-between px-4 pt-3 pb-2 sm:px-5 sm:pt-5">
+                <h2 class="text-base font-semibold text-white sm:text-sm sm:uppercase sm:tracking-wider sm:text-gray-400">Filters</h2>
+                <button id="sheet-close" type="button" aria-label="Close filters" class="sm:hidden p-2 -mr-2 text-gray-400 hover:text-white">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
             </div>
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-    <div>
-        <label id="search-label" class="block text-xs font-medium text-gray-400 mb-1">Search Athlete</label>
-        <input type="text" id="search-input" placeholder="e.g. Lim, Zaid..." class="w-full bg-gray-950 border border-gray-800 rounded-lg px-3 py-2.5 sm:py-2 text-sm text-white focus:outline-none focus:border-hyrox-500">
-    </div>
-    <div>
-        <label class="block text-xs font-medium text-gray-400 mb-1">Athlete's Country (Multi-select)</label>
-        <div id="filter-country-chips" class="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto p-2 bg-gray-950 border border-gray-800 rounded-lg"></div>
-        <select id="filter-country" multiple class="hidden"></select>
-    </div>
-    <div>
-        <label class="block text-xs font-medium text-gray-400 mb-1">Location (Multi-select)</label>
-        <div id="filter-location-chips" class="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto p-2 bg-gray-950 border border-gray-800 rounded-lg"></div>
-        <select id="filter-location" multiple class="hidden"></select>
-    </div>
-    <div>
-        <label class="block text-xs font-medium text-gray-400 mb-1">Season (Multi-select)</label>
-        <div id="filter-season-chips" class="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto p-2 bg-gray-950 border border-gray-800 rounded-lg"></div>
-        <select id="filter-season" multiple class="hidden"></select>
-    </div>
-    <div>
-        <label class="block text-xs font-medium text-gray-400 mb-1">Age Group (AG) (Multi-select)</label>
-        <div id="filter-ag-chips" class="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto p-2 bg-gray-950 border border-gray-800 rounded-lg"></div>
-        <select id="filter-ag" multiple class="hidden"></select>
-    </div>
-    <div>
-        <label class="block text-xs font-medium text-gray-400 mb-1">Duplicates</label>
-        <label class="flex items-center gap-2 bg-gray-950 border border-gray-800 rounded-lg px-3 py-2.5 sm:py-2 text-sm text-gray-200 cursor-pointer">
-            <input type="checkbox" id="best-only" class="accent-yellow-400 w-4 h-4">
-            Fastest time per athlete only
-        </label>
-    </div>
-</div>
-            <div class="flex justify-end pt-2 sm:hidden">
-                <button id="apply-filters-btn" class="w-full bg-yellow-400 text-black font-bold py-2.5 rounded-lg text-sm">Apply Filters</button>
+            <div class="px-4 pb-4 sm:px-5 sm:pb-5 max-h-[60vh] overflow-y-auto sm:max-h-none sm:overflow-visible flex flex-col gap-3 sm:gap-4">
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:gap-4">
+                <div class="sm:flex-1">
+                    <label for="search-input" class="block text-xs font-medium text-gray-400 mb-1">Search athlete</label>
+                    <input type="search" id="search-input" autocomplete="off" enterkeyhint="search" placeholder="e.g. Lim, Zaid..." class="w-full bg-gray-950 border border-gray-800 rounded-lg px-3 py-3 sm:py-2 text-base sm:text-sm text-white focus:outline-none focus:border-hyrox-500">
+                </div>
+                <div class="sm:shrink-0">
+                    <label class="w-full flex items-center justify-between gap-3 sm:gap-4 whitespace-nowrap bg-gray-950 border border-gray-800 rounded-lg px-3 py-3 sm:py-2 text-sm text-gray-200 cursor-pointer">
+                        <span>Fastest time per athlete only</span>
+                        <input type="checkbox" id="best-only" class="sr-only peer">
+                        <span class="shrink-0 relative w-10 h-6 rounded-full bg-gray-700 peer-checked:bg-yellow-400 transition peer-focus-visible:ring-2 peer-focus-visible:ring-yellow-400 after:content-[''] after:absolute after:top-1 after:left-1 after:w-4 after:h-4 after:rounded-full after:bg-white after:transition peer-checked:after:translate-x-4"></span>
+                    </label>
+                </div>
+                </div>
+                <div id="filter-sections" class="flex flex-col gap-3 sm:grid sm:grid-cols-2 lg:grid-cols-3 sm:gap-4"></div>
             </div>
-        </div>
+            <div class="sm:hidden flex gap-2 p-3 border-t border-gray-800 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+                <button id="sheet-clear" type="button" class="px-4 py-3 rounded-lg border border-gray-700 bg-gray-800 text-gray-200 text-sm font-medium">Clear</button>
+                <button id="sheet-apply" type="button" class="flex-1 py-3 rounded-lg bg-yellow-400 text-black font-bold text-sm">Show results</button>
+            </div>
+        </section>
+
+        <!-- Active filters -->
+        <div id="active-pills" class="flex flex-wrap gap-2 items-center empty:hidden"></div>
 
         <!-- Data Table -->
         <div class="bg-gray-900 border border-gray-800 rounded-xl shadow-sm overflow-hidden">
@@ -174,483 +127,565 @@
             <div class="overflow-x-auto relative">
                 <table class="w-full text-left border-collapse text-xs sm:text-sm whitespace-nowrap">
                     <thead id="results-thead"></thead>
-                    <tbody id="results-tbody" class="divide-y divide-gray-800 text-gray-300">
-                        <!-- Populated by JS -->
-                    </tbody>
+                    <tbody id="results-tbody" class="divide-y divide-gray-800 text-gray-300"></tbody>
                 </table>
             </div>
             <div id="show-more-wrap" class="hidden p-4 border-t border-gray-800 text-center">
-                <button id="show-more-btn" class="bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm font-medium px-4 py-2.5 rounded-lg border border-gray-700 transition w-full sm:w-auto">
-                    Show more
-                </button>
+                <button id="show-more-btn" class="bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm font-medium px-4 py-2.5 rounded-lg border border-gray-700 transition w-full sm:w-auto">Show more</button>
             </div>
         </div>
-        </div>
-    </main>
+    </div>
+</main>
 
-    <footer class="text-center py-6 text-xs text-gray-500 px-4">
-        Hyrox Asia Results PWA &bull; Hosted on GitHub Pages &bull; Offline Ready
-    </footer>
+<footer class="text-center py-6 text-xs text-gray-500 px-4">
+    Hyrox Asia Results PWA &bull; Hosted on GitHub Pages &bull; Offline Ready
+</footer>
 
-    <!-- App Logic -->
-    <script>
-        // ---------------------------------------------------------------
-        // Config: one entry per category / CSV file
-        // ---------------------------------------------------------------
-        const GITHUB_BASE_URL = 'https://raw.githubusercontent.com/crixster/hyrox-results/main/';
-        const PAGE_SIZE = 250;
+<script>
+    const GITHUB_BASE_URL = 'https://raw.githubusercontent.com/crixster/hyrox-results/main/';
+    const PAGE_SIZE = 250;
 
-const CATEGORIES = [
-    { key: 'women',           label: 'Women',              file: 'Hyrox_Asia_Women.csv',            layout: 'solo' },
-    { key: 'men',             label: 'Men',                file: 'Hyrox_Asia_Men.csv',              layout: 'solo' },
-    { key: 'promen',          label: 'Pro Men',            file: 'Hyrox_Asia_ProMen.csv',           layout: 'solo' },
-    { key: 'prowomen',        label: 'Pro Women',          file: 'Hyrox_Asia_ProWomen.csv',         layout: 'solo' },
-    { key: 'doublesmen',      label: 'Men Doubles',        file: 'Hyrox_Asia_DoublesMen.csv',       layout: 'doubles' },
-    { key: 'doublesmenpro',   label: 'Men Doubles Pro',    file: 'Hyrox_Asia_DoublesMenPro.csv',    layout: 'doubles' },
-    { key: 'doubleswomen',    label: 'Women Doubles',      file: 'Hyrox_Asia_DoublesWomen.csv',     layout: 'doubles' },
-    { key: 'doubleswomenpro', label: 'Women Doubles Pro',  file: 'Hyrox_Asia_DoublesWomenPro.csv',  layout: 'doubles' },
-    { key: 'doublesmixed',    label: 'Mixed Doubles',      file: 'Hyrox_Asia_DoublesMixed.csv',     layout: 'doubles' },
-    { key: 'relaymen',        label: 'Team Relay Men',     file: 'Hyrox_Asia_TeamRelayMen.csv',     layout: 'relay', fallback: 'results.csv' },
-    { key: 'relaymixed',      label: 'Team Relay Mixed',   file: 'Hyrox_Asia_TeamRelayMixed.csv',   layout: 'relay' }
-];
+    const CATEGORIES = [
+        { key: 'women',           label: 'Women',             file: 'Hyrox_Asia_Women.csv',           layout: 'solo' },
+        { key: 'men',             label: 'Men',               file: 'Hyrox_Asia_Men.csv',             layout: 'solo' },
+        { key: 'promen',          label: 'Pro Men',           file: 'Hyrox_Asia_ProMen.csv',          layout: 'solo' },
+        { key: 'prowomen',        label: 'Pro Women',         file: 'Hyrox_Asia_ProWomen.csv',        layout: 'solo' },
+        { key: 'doublesmen',      label: 'Men Doubles',       file: 'Hyrox_Asia_DoublesMen.csv',      layout: 'doubles' },
+        { key: 'doublesmenpro',   label: 'Men Doubles Pro',   file: 'Hyrox_Asia_DoublesMenPro.csv',   layout: 'doubles' },
+        { key: 'doubleswomen',    label: 'Women Doubles',     file: 'Hyrox_Asia_DoublesWomen.csv',    layout: 'doubles' },
+        { key: 'doubleswomenpro', label: 'Women Doubles Pro', file: 'Hyrox_Asia_DoublesWomenPro.csv', layout: 'doubles' },
+        { key: 'doublesmixed',    label: 'Mixed Doubles',     file: 'Hyrox_Asia_DoublesMixed.csv',    layout: 'doubles' },
+        { key: 'relaymen',        label: 'Team Relay Men',    file: 'Hyrox_Asia_TeamRelayMen.csv',    layout: 'relay', fallback: 'results.csv' },
+        { key: 'relaymixed',      label: 'Team Relay Mixed',  file: 'Hyrox_Asia_TeamRelayMixed.csv',  layout: 'relay' }
+    ];
 
-        const COLUMNS_SOLO = [
-            { label: 'Rank',     sortKey: 'OverallRank' },
-            { label: 'Location', sortKey: 'Location' },
-            { label: 'Season',   sortKey: 'Season' },
-            { label: 'AG',       sortKey: 'AG' },
-            { label: 'Time',     sortKey: 'Time' },
-            { label: 'Athlete',  sortKey: 'Athlete' },
-            { label: 'Country',  sortKey: 'Country' }
-        ];
-        const COLUMNS_RELAY = [
-            { label: 'Rank',           sortKey: 'OverallRank' },
-            { label: 'Location',       sortKey: 'Location' },
-            { label: 'Season',         sortKey: 'Season' },
-            { label: 'AG',             sortKey: 'AG' },
-            { label: 'Time',           sortKey: 'Time' },
-            { label: 'Athletes' },
-            { label: 'Team Countries', sortKey: 'TeamCountries' }
-        ];
-        const COLUMNS_DOUBLES = [
-            { label: 'Rank',      sortKey: 'OverallRank' },
-            { label: 'Location',  sortKey: 'Location' },
-            { label: 'Season',    sortKey: 'Season' },
-            { label: 'AG',        sortKey: 'AG' },
-            { label: 'Time',      sortKey: 'Time' },
-            { label: 'Athlete 1', sortKey: 'Athlete1' },
-            { label: 'Athlete 2', sortKey: 'Athlete2' },
-            { label: 'Country',   sortKey: 'Country1' }
-        ];
-        const COLUMNS_BY_LAYOUT = { solo: COLUMNS_SOLO, doubles: COLUMNS_DOUBLES, relay: COLUMNS_RELAY };
+    // Chip filters (each becomes a collapsible section)
+    const FILTERS = [
+        { id: 'filter-location', label: 'Venue',             search: 'Search venue...' },
+        { id: 'filter-country',  label: "Athlete's country", search: 'Search country...' },
+        { id: 'filter-season',   label: 'Season' },
+        { id: 'filter-ag',       label: 'Age group' }
+    ];
 
-        const datasets = {};
-        let currentCategory = null;
-        let currentDataset = [];
-        let currentSortColumn = 'OverallRank';
-        let currentSortDirection = 'asc';
-        let visibleLimit = PAGE_SIZE;
-        let loadToken = 0;
+    const COLUMNS_SOLO = [
+        { label: 'Rank', sortKey: 'OverallRank' }, { label: 'Venue', sortKey: 'Location' },
+        { label: 'Season', sortKey: 'Season' }, { label: 'AG', sortKey: 'AG' }, { label: 'Time', sortKey: 'Time' },
+        { label: 'Athlete', sortKey: 'Athlete' }, { label: 'Country', sortKey: 'Country' }
+    ];
+    const COLUMNS_RELAY = [
+        { label: 'Rank', sortKey: 'OverallRank' }, { label: 'Venue', sortKey: 'Location' },
+        { label: 'Season', sortKey: 'Season' }, { label: 'AG', sortKey: 'AG' }, { label: 'Time', sortKey: 'Time' },
+        { label: 'Athletes' }, { label: 'Team Countries', sortKey: 'TeamCountries' }
+    ];
+    const COLUMNS_DOUBLES = [
+        { label: 'Rank', sortKey: 'OverallRank' }, { label: 'Venue', sortKey: 'Location' },
+        { label: 'Season', sortKey: 'Season' }, { label: 'AG', sortKey: 'AG' }, { label: 'Time', sortKey: 'Time' },
+        { label: 'Athlete 1', sortKey: 'Athlete1' }, { label: 'Athlete 2', sortKey: 'Athlete2' },
+        { label: 'Country', sortKey: 'Country1' }
+    ];
+    const COLUMNS_BY_LAYOUT = { solo: COLUMNS_SOLO, doubles: COLUMNS_DOUBLES, relay: COLUMNS_RELAY };
 
-        function escapeHtml(str) {
-            return String(str ?? '').replace(/[&<>"']/g, c => (
-                { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
-            ));
-        }
+    const CHIP_ON  = ['bg-yellow-400', 'text-black', 'border-yellow-400', 'font-semibold'];
+    const CHIP_OFF = ['bg-gray-900', 'text-gray-300', 'border-gray-700'];
 
-        function timeToSeconds(timeStr) {
-            if (!timeStr) return 0;
-            const parts = timeStr.split(':').map(Number);
-            if (parts.some(isNaN)) return 0;
-            if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
-            if (parts.length === 2) return parts[0] * 60 + parts[1];
-            return 0;
-        }
+    const $ = (id) => document.getElementById(id);
+    const datasets = {};
+    let currentCategory = null;
+    let currentDataset = [];
+    let currentSortColumn = 'OverallRank';
+    let currentSortDirection = 'asc';
+    let visibleLimit = PAGE_SIZE;
+    let loadToken = 0;
 
-        function athletesOf(item) {
-    if (currentCategory.layout === 'relay') return [item.Athlete1, item.Athlete2, item.Athlete3, item.Athlete4];
-    if (currentCategory.layout === 'doubles') return [item.Athlete1, item.Athlete2];
-    return [item.Athlete];
-}
-
-function countriesOf(item) {
-    let list;
-    if (currentCategory.layout === 'relay') list = (item.TeamCountries || '').split(';');
-    else if (currentCategory.layout === 'doubles') list = [item.Country1, item.Country2];
-    else list = [item.Country];
-    return [...new Set(list.map(c => (c || '').trim()).filter(Boolean))];
-}
-
-// Identity of an athlete (solo) or a team (doubles/relay), so the same name is treated as one entry
-function athleteKey(item) {
-    const names = athletesOf(item).filter(Boolean).map(n => n.toLowerCase()).sort();
-    return names.length ? names.join('|') : item.ResultId;
-}
-
-// Keep only the fastest row for each athlete/team
-function keepBestPerAthlete(rows) {
-    const best = new Map();
-    for (const row of rows) {
-        const key = athleteKey(row);
-        const secs = timeToSeconds(row.Time) || Infinity;
-        const current = best.get(key);
-        if (!current || secs < current.secs) best.set(key, { row, secs });
+    function escapeHtml(str) {
+        return String(str ?? '').replace(/[&<>"']/g, c => (
+            { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+        ));
     }
-    return [...best.values()].map(v => v.row);
-}
 
-        function secondsToTime(totalSecs) {
-            if (!totalSecs || isNaN(totalSecs)) return '-';
-            const hrs = Math.floor(totalSecs / 3600);
-            const mins = Math.floor((totalSecs % 3600) / 60);
-            const secs = totalSecs % 60;
-            const pad = (n) => String(n).padStart(2, '0');
-            if (hrs > 0) return `${hrs}:${pad(mins)}:${pad(secs)}`;
-            return `${mins}:${pad(secs)}`;
+    function timeToSeconds(timeStr) {
+        if (!timeStr) return 0;
+        const parts = timeStr.split(':').map(Number);
+        if (parts.some(isNaN)) return 0;
+        if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+        if (parts.length === 2) return parts[0] * 60 + parts[1];
+        return 0;
+    }
+
+    function secondsToTime(totalSecs) {
+        if (!totalSecs || isNaN(totalSecs)) return '-';
+        const hrs = Math.floor(totalSecs / 3600);
+        const mins = Math.floor((totalSecs % 3600) / 60);
+        const secs = totalSecs % 60;
+        const pad = (n) => String(n).padStart(2, '0');
+        if (hrs > 0) return `${hrs}:${pad(mins)}:${pad(secs)}`;
+        return `${mins}:${pad(secs)}`;
+    }
+
+    function athletesOf(item) {
+        if (currentCategory.layout === 'relay') return [item.Athlete1, item.Athlete2, item.Athlete3, item.Athlete4];
+        if (currentCategory.layout === 'doubles') return [item.Athlete1, item.Athlete2];
+        return [item.Athlete];
+    }
+
+    function countriesOf(item) {
+        let list;
+        if (currentCategory.layout === 'relay') list = (item.TeamCountries || '').split(';');
+        else if (currentCategory.layout === 'doubles') list = [item.Country1, item.Country2];
+        else list = [item.Country];
+        return [...new Set(list.map(c => (c || '').trim()).filter(Boolean))];
+    }
+
+    // Identity of an athlete (solo) or a team (doubles/relay)
+    function athleteKey(item) {
+        const names = athletesOf(item).filter(Boolean).map(n => n.toLowerCase()).sort();
+        return names.length ? names.join('|') : item.ResultId;
+    }
+
+    function keepBestPerAthlete(rows) {
+        const best = new Map();
+        for (const row of rows) {
+            const key = athleteKey(row);
+            const secs = timeToSeconds(row.Time) || Infinity;
+            const current = best.get(key);
+            if (!current || secs < current.secs) best.set(key, { row, secs });
         }
+        return [...best.values()].map(v => v.row);
+    }
 
-        function parseCSV(text) {
-            text = text.replace(/^\uFEFF/, '');
-            const lines = text.split(/\r\n|\n/);
-            if (lines.length < 2) return [];
-            const headers = parseCSVLine(lines[0]);
-            const results = [];
-            for (let i = 1; i < lines.length; i++) {
-                if (!lines[i].trim()) continue;
-                const currentLine = parseCSVLine(lines[i]);
-                const obj = {};
-                headers.forEach((h, index) => {
-                    obj[h.trim()] = currentLine[index] !== undefined ? currentLine[index].trim() : '';
-                });
-                if (obj.OverallRank) obj.OverallRank = Number(obj.OverallRank);
-                if (obj.Year) obj.Year = Number(obj.Year);
-                results.push(obj);
+    function parseCSV(text) {
+        text = text.replace(/^\uFEFF/, '');
+        const lines = text.split(/\r\n|\n/);
+        if (lines.length < 2) return [];
+        const headers = parseCSVLine(lines[0]);
+        const results = [];
+        for (let i = 1; i < lines.length; i++) {
+            if (!lines[i].trim()) continue;
+            const currentLine = parseCSVLine(lines[i]);
+            const obj = {};
+            headers.forEach((h, index) => {
+                obj[h.trim()] = currentLine[index] !== undefined ? currentLine[index].trim() : '';
+            });
+            if (obj.OverallRank) obj.OverallRank = Number(obj.OverallRank);
+            if (obj.Year) obj.Year = Number(obj.Year);
+            results.push(obj);
+        }
+        return results;
+    }
+
+    function parseCSVLine(line) {
+        const result = [];
+        let startValue = 0;
+        let inQuotes = false;
+        const clean = (v) => v.trim().replace(/^=\s*"/, '').replace(/^"|"$/g, '').replace(/""/g, '"').trim();
+        for (let i = 0; i < line.length; i++) {
+            if (line[i] === '"') inQuotes = !inQuotes;
+            else if (line[i] === ',' && !inQuotes) {
+                result.push(clean(line.substring(startValue, i)));
+                startValue = i + 1;
             }
-            return results;
         }
+        result.push(clean(line.substring(startValue)));
+        return result;
+    }
 
-        function parseCSVLine(line) {
-            const result = [];
-            let startValue = 0;
-            let inQuotes = false;
-            const clean = (v) => v.trim().replace(/^=\s*"/, '').replace(/^"|"$/g, '').replace(/""/g, '"').trim();
-            for (let i = 0; i < line.length; i++) {
-                if (line[i] === '"') inQuotes = !inQuotes;
-                else if (line[i] === ',' && !inQuotes) {
-                    result.push(clean(line.substring(startValue, i)));
-                    startValue = i + 1;
-                }
-            }
-            result.push(clean(line.substring(startValue)));
-            return result;
-        }
+    async function fetchCsv(file) {
+        const response = await fetch(`${GITHUB_BASE_URL}${file}?t=${Date.now()}`);
+        if (!response.ok) throw new Error(`HTTP ${response.status} for ${file}`);
+        return parseCSV(await response.text());
+    }
 
-        async function fetchCsv(file) {
-            const response = await fetch(`${GITHUB_BASE_URL}${file}?t=${Date.now()}`);
-            if (!response.ok) throw new Error(`HTTP ${response.status} for ${file}`);
-            return parseCSV(await response.text());
-        }
+    function getCategoryFromHash() {
+        const key = location.hash.replace(/^#\/?/, '');
+        return CATEGORIES.find(c => c.key === key) || CATEGORIES[0];
+    }
 
-        function getCategoryFromHash() {
-            const key = location.hash.replace(/^#\/?/, '');
-            return CATEGORIES.find(c => c.key === key) || CATEGORIES[0];
-        }
+    function renderNav() {
+        $('category-nav').innerHTML = CATEGORIES.map(c => {
+            const active = currentCategory && c.key === currentCategory.key;
+            const cls = active
+                ? 'border-hyrox-500 text-hyrox-500 bg-gray-800/40'
+                : 'border-transparent text-gray-400 hover:text-white';
+            return `<a href="#/${c.key}" class="whitespace-nowrap px-3.5 py-1.5 text-xs sm:text-sm font-semibold border-b-2 rounded-t-lg transition ${cls}" ${active ? 'aria-current="page"' : ''}>${escapeHtml(c.label)}</a>`;
+        }).join('');
+    }
 
-        function renderNav() {
-            document.getElementById('category-nav').innerHTML = CATEGORIES.map(c => {
-                const active = currentCategory && c.key === currentCategory.key;
-                const cls = active
-                    ? 'border-hyrox-500 text-hyrox-500 bg-gray-800/40'
-                    : 'border-transparent text-gray-400 hover:text-white';
-                return `<a href="#/${c.key}" class="whitespace-nowrap px-3.5 py-1.5 text-xs sm:text-sm font-semibold border-b-2 rounded-t-lg transition ${cls}" ${active ? 'aria-current="page"' : ''}>${escapeHtml(c.label)}</a>`;
-            }).join('');
-        }
+    function showStatus(html) {
+        $('status').innerHTML = html;
+        $('status').classList.remove('hidden');
+        $('content').classList.add('hidden');
+    }
 
-        function showStatus(html) {
-            const status = document.getElementById('status');
-            status.innerHTML = html;
-            status.classList.remove('hidden');
-            document.getElementById('content').classList.add('hidden');
-        }
+    function showContent() {
+        $('status').classList.add('hidden');
+        $('content').classList.remove('hidden');
+    }
 
-        function showContent() {
-            document.getElementById('status').classList.add('hidden');
-            document.getElementById('content').classList.remove('hidden');
-        }
+    async function openCategory(cat) {
+        const myToken = ++loadToken;
+        currentCategory = cat;
+        setSheet(false);
+        document.title = `${cat.label} - Hyrox Asia Results`;
+        $('page-subtitle').textContent = cat.label;
+        $('table-title').textContent = `${cat.label} Results`;
+        renderNav();
+        resetFilterControls();
 
-        async function openCategory(cat) {
-            const myToken = ++loadToken;
-            currentCategory = cat;
-            document.title = `${cat.label} - Hyrox Asia Results`;
-            document.getElementById('page-subtitle').textContent = cat.label;
-            document.getElementById('table-title').textContent = `${cat.label} Results`;
-          document.getElementById('search-label').textContent = 'Search Athlete';
-            renderNav();
-            resetFilterControls();
-
-            if (!datasets[cat.key]) {
-                showStatus(`<p>Loading ${escapeHtml(cat.label)} results...</p>`);
+        if (!datasets[cat.key]) {
+            showStatus(`<p>Loading ${escapeHtml(cat.label)} results...</p>`);
+            try {
+                let rows;
                 try {
-                    let rows;
-                    try {
-                        rows = await fetchCsv(cat.file);
-                    } catch (err) {
-                        if (!cat.fallback) throw err;
-                        rows = await fetchCsv(cat.fallback);
-                    }
-                    if (myToken !== loadToken) return;
-                    datasets[cat.key] = rows;
+                    rows = await fetchCsv(cat.file);
                 } catch (err) {
-                    if (myToken !== loadToken) return;
-                    showStatus(`
-                        <p class="font-semibold text-white mb-1">Could not load ${escapeHtml(cat.label)} results.</p>
-                        <p class="text-gray-400">Check that <span class="font-mono text-gray-300">${escapeHtml(cat.file)}</span> has been uploaded to the GitHub repo, then reload.</p>`);
-                    return;
+                    if (!cat.fallback) throw err;
+                    rows = await fetchCsv(cat.fallback);
                 }
-            }
-
-            currentDataset = datasets[cat.key];
-            if (currentDataset.length === 0) {
-                showStatus(`<p>${escapeHtml(cat.label)}: the file loaded but contains no results.</p>`);
+                if (myToken !== loadToken) return;
+                datasets[cat.key] = rows;
+            } catch (err) {
+                if (myToken !== loadToken) return;
+                showStatus(`
+                    <p class="font-semibold text-white mb-1">Could not load ${escapeHtml(cat.label)} results.</p>
+                    <p class="text-gray-400">Check that <span class="font-mono text-gray-300">${escapeHtml(cat.file)}</span> has been uploaded to the GitHub repo, then reload.</p>`);
                 return;
             }
-            showContent();
-            initFilters(currentDataset);
-            filterAndRender();
         }
 
-function resetFilterControls() {
-    document.getElementById('search-input').value = '';
-    document.getElementById('best-only').checked = false;
-    ['filter-country', 'filter-location', 'filter-season', 'filter-ag'].forEach(id => {
-        const select = document.getElementById(id);
-        if (select) Array.from(select.options).forEach(opt => opt.selected = false);
-    });
-    document.querySelectorAll('.filter-chip').forEach(chip => {
-        chip.classList.remove('bg-yellow-400', 'text-black', 'border-yellow-400', 'font-semibold');
-        chip.classList.add('bg-gray-900', 'text-gray-300', 'border-gray-800');
-    });
-    currentSortColumn = 'OverallRank';
-    currentSortDirection = 'asc';
-    visibleLimit = PAGE_SIZE;
-}
-
-function initFilters(data) {
-    const uniq = (key) => [...new Set(data.map(item => item[key]))].filter(Boolean).sort();
-    const countries = [...new Set(data.flatMap(countriesOf))].sort();
-
-    setupChipFilter('filter-country', countries);
-    setupChipFilter('filter-location', uniq('Location'));
-    setupChipFilter('filter-season', uniq('Season'));
-    setupChipFilter('filter-ag', uniq('AG'));
-}
-
-        function setupChipFilter(id, values) {
-            const select = document.getElementById(id);
-            const container = document.getElementById(`${id}-chips`);
-            
-            select.innerHTML = values.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
-            
-            container.innerHTML = values.map(v => `
-                <button type="button" data-value="${escapeHtml(v)}" class="filter-chip text-xs px-2.5 py-1 rounded-full border border-gray-800 bg-gray-900 text-gray-300 transition">
-                    ${escapeHtml(v)}
-                </button>
-            `).join('');
-
-            container.querySelectorAll('.filter-chip').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const val = btn.getAttribute('data-value');
-                    const opt = Array.from(select.options).find(o => o.value === val);
-                    if (opt) {
-                        opt.selected = !opt.selected;
-                        if (opt.selected) {
-                            btn.classList.remove('bg-gray-900', 'text-gray-300', 'border-gray-800');
-                            btn.classList.add('bg-yellow-400', 'text-black', 'border-yellow-400', 'font-semibold');
-                        } else {
-                            btn.classList.add('bg-gray-900', 'text-gray-300', 'border-gray-800');
-                            btn.classList.remove('bg-yellow-400', 'text-black', 'border-yellow-400', 'font-semibold');
-                        }
-                    }
-                    visibleLimit = PAGE_SIZE;
-                    filterAndRender();
-                });
-            });
+        currentDataset = datasets[cat.key];
+        if (currentDataset.length === 0) {
+            showStatus(`<p>${escapeHtml(cat.label)}: the file loaded but contains no results.</p>`);
+            return;
         }
-
-        function getSelectedValues(selectEl) {
-            return Array.from(selectEl.selectedOptions).map(opt => opt.value);
-        }
-
-        function renderHeader() {
-            const columns = COLUMNS_BY_LAYOUT[currentCategory.layout];
-            document.getElementById('results-thead').innerHTML = `
-                <tr class="bg-gray-950 text-gray-400 text-[11px] sm:text-xs uppercase tracking-wider border-b border-gray-800 select-none">
-                    ${columns.map(col => {
-                        if (!col.sortKey) return `<th class="py-3 px-3 sm:px-4">${escapeHtml(col.label)}</th>`;
-                        const active = col.sortKey === currentSortColumn;
-                        const arrow = active ? (currentSortDirection === 'asc' ? ' ▲' : ' ▼') : '';
-                        return `<th class="py-3 px-3 sm:px-4 cursor-pointer hover:text-white transition sort-header ${active ? 'text-hyrox-500' : ''}" data-column="${col.sortKey}">${escapeHtml(col.label)}<span>${arrow}</span></th>`;
-                    }).join('')}
-                </tr>`;
-        }
-
-        function rowHtml(item) {
-            const time = (item.Time || '-').replace(/^=\s*"/, '').replace(/"/g, '');
-            let who;
-            if (currentCategory.layout === 'relay') {
-                who = `<td class="py-3 px-3 sm:px-4 text-xs text-gray-300">${escapeHtml([item.Athlete1, item.Athlete2, item.Athlete3, item.Athlete4].filter(Boolean).join(', '))}</td>
-                   <td class="py-3 px-3 sm:px-4 text-xs text-gray-400">${escapeHtml(item.TeamCountries || '-')}</td>`;
-            } else if (currentCategory.layout === 'doubles') {
-                const c1 = item.Country1 || '', c2 = item.Country2 || '';
-                const countries = (c1 && c2 && c1 !== c2) ? `${c1} / ${c2}` : (c1 || c2 || '-');
-                who = `<td class="py-3 px-3 sm:px-4 text-gray-200">${escapeHtml(item.Athlete1 || '-')}</td>
-                   <td class="py-3 px-3 sm:px-4 text-gray-200">${escapeHtml(item.Athlete2 || '-')}</td>
-                   <td class="py-3 px-3 sm:px-4 text-xs text-gray-400">${escapeHtml(countries)}</td>`;
-            } else {
-                who = `<td class="py-3 px-3 sm:px-4 text-gray-200">${escapeHtml(item.Athlete || '-')}</td>
-                   <td class="py-3 px-3 sm:px-4 text-xs text-gray-400">${escapeHtml(item.Country || '-')}</td>`;
-            }
-            return `
-                <tr class="hover:bg-gray-900/50 transition">
-                    <td class="py-3 px-3 sm:px-4 font-semibold text-hyrox-500">${escapeHtml(item.OverallRank || '-')}</td>
-                    <td class="py-3 px-3 sm:px-4">${escapeHtml(item.Location || '-')}</td>
-                    <td class="py-3 px-3 sm:px-4">${escapeHtml(item.Season || '-')}</td>
-                    <td class="py-3 px-3 sm:px-4"><span class="bg-gray-800 text-gray-200 px-2 py-0.5 rounded text-[11px] sm:text-xs font-medium">${escapeHtml(item.AG || '-')}</span></td>
-                    <td class="py-3 px-3 sm:px-4 font-mono text-emerald-400">${escapeHtml(time)}</td>
-                    ${who}
-                </tr>`;
-        }
-
-       function filterAndRender() {
-    if (!currentCategory) return;
-
-    const searchQuery = document.getElementById('search-input').value.toLowerCase().trim();
-    const selectedCountries = getSelectedValues(document.getElementById('filter-country'));
-    const selectedLocations = getSelectedValues(document.getElementById('filter-location'));
-    const selectedSeasons = getSelectedValues(document.getElementById('filter-season'));
-    const selectedAgs = getSelectedValues(document.getElementById('filter-ag'));
-    const bestOnly = document.getElementById('best-only').checked;
-
-    let filtered = currentDataset.filter(item => {
-        const matchSearch = !searchQuery ||
-            athletesOf(item).some(name => name && name.toLowerCase().includes(searchQuery));
-        const matchCountry = selectedCountries.length === 0 ||
-            countriesOf(item).some(c => selectedCountries.includes(c));
-        const matchLoc = selectedLocations.length === 0 || selectedLocations.includes(item.Location);
-        const matchSeason = selectedSeasons.length === 0 || selectedSeasons.includes(item.Season);
-        const matchAg = selectedAgs.length === 0 || selectedAgs.includes(item.AG);
-        return matchSearch && matchCountry && matchLoc && matchSeason && matchAg;
-    });
-
-    if (bestOnly) filtered = keepBestPerAthlete(filtered);
-
-    filtered.sort((a, b) => {
-        let valA = a[currentSortColumn];
-        let valB = b[currentSortColumn];
-        if (currentSortColumn === 'OverallRank') {
-            valA = Number(valA) || 99999;
-            valB = Number(valB) || 99999;
-        } else if (currentSortColumn === 'Time') {
-            valA = timeToSeconds(valA) || 999999;
-            valB = timeToSeconds(valB) || 999999;
-        } else {
-            valA = (valA || '').toString().toLowerCase();
-            valB = (valB || '').toString().toLowerCase();
-        }
-        if (valA < valB) return currentSortDirection === 'asc' ? -1 : 1;
-        if (valA > valB) return currentSortDirection === 'asc' ? 1 : -1;
-        return 0;
-    });
-
-    const count = filtered.length;
-    const shown = Math.min(count, visibleLimit);
-    document.getElementById('kpi-count').textContent = count;
-    document.getElementById('table-count').textContent =
-        count > shown ? `Showing ${shown} of ${count} results` : `Showing ${count} results`;
-
-    const timesInSecs = filtered.map(i => timeToSeconds(i.Time)).filter(t => t > 0);
-    if (timesInSecs.length > 0) {
-        document.getElementById('kpi-fastest').textContent = secondsToTime(Math.min(...timesInSecs));
-        document.getElementById('kpi-slowest').textContent = secondsToTime(Math.max(...timesInSecs));
-        document.getElementById('kpi-average').textContent =
-            secondsToTime(Math.round(timesInSecs.reduce((a, b) => a + b, 0) / timesInSecs.length));
-    } else {
-        document.getElementById('kpi-fastest').textContent = '-';
-        document.getElementById('kpi-slowest').textContent = '-';
-        document.getElementById('kpi-average').textContent = '-';
+        showContent();
+        initFilters(currentDataset);
+        filterAndRender();
     }
 
-    renderHeader();
-    document.getElementById('results-tbody').innerHTML =
-        filtered.slice(0, visibleLimit).map(rowHtml).join('') ||
-        `<tr><td colspan="${COLUMNS_BY_LAYOUT[currentCategory.layout].length}" class="text-center py-8 text-gray-500">No race results found.</td></tr>`;
-    document.getElementById('show-more-wrap').classList.toggle('hidden', count <= shown);
-}
+    // ---------------------------------------------------------------
+    // Filter UI
+    // ---------------------------------------------------------------
+    function buildFilterSections() {
+        const desktop = matchMedia('(min-width: 640px)').matches;
+        const card = (f) => `
+            <details class="group bg-gray-950 border border-gray-800 rounded-lg sm:flex-1" ${desktop ? 'open' : ''}>
+                <summary class="flex items-center justify-between gap-2 px-3 py-3 sm:py-2.5 cursor-pointer select-none sm:cursor-default list-none [&::-webkit-details-marker]:hidden">
+                    <span class="text-sm font-medium text-gray-200">${f.label}</span>
+                    <span class="flex items-center gap-2 min-w-0">
+                        <button type="button" id="${f.id}-clear" class="hidden text-xs text-hyrox-500 font-medium px-1.5 py-0.5 rounded hover:underline">Clear</button>
+                        <span id="${f.id}-sum" class="text-xs text-gray-500 truncate max-w-[9rem]">Showing all</span>
+                        <svg class="w-4 h-4 shrink-0 text-gray-500 transition-transform group-open:rotate-180 sm:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </span>
+                </summary>
+                <div class="px-3 pb-3 space-y-2">
+                    ${f.search ? `<input type="search" id="${f.id}-search" autocomplete="off" placeholder="${f.search}" aria-label="${f.search.replace('...', '')}" class="w-full bg-gray-900 border border-gray-800 rounded-lg px-3 py-2.5 sm:py-2 text-base sm:text-sm text-white focus:outline-none focus:border-hyrox-500">` : ''}
+                    <div id="${f.id}-chips" class="flex flex-wrap gap-2 max-h-48 overflow-y-auto"></div>
+                    <select id="${f.id}" multiple class="hidden"></select>
+                </div>
+            </details>`;
+        const cards = FILTERS.map(card);
+        // Venue | Country | Season stacked over Age group
+        $('filter-sections').innerHTML = cards.slice(0, 2).join('') +
+            `<div class="flex flex-col gap-3 sm:gap-4 sm:col-span-2 lg:col-span-1">${cards.slice(2).join('')}</div>`;
 
-        // Mobile filter drawer toggle
-        document.getElementById('mobile-filter-toggle').addEventListener('click', () => {
-            const container = document.getElementById('filters-container');
-            container.classList.toggle('hidden');
+        FILTERS.filter(f => f.search).forEach(f =>
+            $(`${f.id}-search`).addEventListener('input', () => applyChipSearch(f.id)));
+
+        const isDesktop = () => matchMedia('(min-width: 640px)').matches;
+        document.querySelectorAll('#filter-sections summary').forEach(sm =>
+            sm.addEventListener('click', e => { if (isDesktop()) e.preventDefault(); }));
+        matchMedia('(min-width: 640px)').addEventListener('change', e => {
+            if (e.matches) document.querySelectorAll('#filter-sections details').forEach(d => d.open = true);
         });
+        FILTERS.forEach(f => $(`${f.id}-clear`).addEventListener('click', e => {
+            e.preventDefault(); e.stopPropagation();
+            Array.from($(f.id).options).forEach(o => o.selected = false);
+            syncChips(f.id);
+            if (f.search) { $(`${f.id}-search`).value = ''; applyChipSearch(f.id); }
+            rerender();
+        }));
+    }
 
-        document.getElementById('apply-filters-btn').addEventListener('click', () => {
-            document.getElementById('filters-container').classList.add('hidden');
+    // Hide chips that don't match the search text (selected chips always stay visible)
+    function applyChipSearch(id) {
+        if (!id) { FILTERS.filter(f => f.search).forEach(f => applyChipSearch(f.id)); return; }
+        const q = $(`${id}-search`).value.toLowerCase().trim();
+        const on = new Set(getSelectedValues($(id)));
+        document.querySelectorAll(`#${id}-chips .filter-chip`).forEach(b => {
+            b.classList.toggle('hidden', !!q && !b.dataset.value.toLowerCase().includes(q) && !on.has(b.dataset.value));
         });
+    }
 
-        document.getElementById('results-thead').addEventListener('click', (e) => {
-            const th = e.target.closest('.sort-header');
-            if (!th) return;
-            const column = th.getAttribute('data-column');
-            if (currentSortColumn === column) currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
-            else { currentSortColumn = column; currentSortDirection = 'asc'; }
-            visibleLimit = PAGE_SIZE;
-            filterAndRender();
+    function getSelectedValues(selectEl) {
+        return Array.from(selectEl.selectedOptions).map(opt => opt.value);
+    }
+
+    function syncChips(id) {
+        const on = new Set(getSelectedValues($(id)));
+        document.querySelectorAll(`#${id}-chips .filter-chip`).forEach(b => {
+            const active = on.has(b.dataset.value);
+            b.classList.remove(...(active ? CHIP_OFF : CHIP_ON));
+            b.classList.add(...(active ? CHIP_ON : CHIP_OFF));
         });
+    }
 
-        const rerender = () => { visibleLimit = PAGE_SIZE; filterAndRender(); };
-        document.getElementById('search-input').addEventListener('input', rerender);
+    function toggleOption(id, value, selected) {
+        const opt = Array.from($(id).options).find(o => o.value === value);
+        if (opt) opt.selected = selected;
+        syncChips(id);
+        const f = FILTERS.find(x => x.id === id);
+        if (f && f.search) applyChipSearch(id);
+    }
 
-        document.getElementById('show-more-btn').addEventListener('click', () => {
-            visibleLimit += PAGE_SIZE;
-            filterAndRender();
-        });
-
-        document.getElementById('reset-btn').addEventListener('click', () => {
-            resetFilterControls();
-            filterAndRender();
-        });
-            document.getElementById('best-only').addEventListener('change', rerender);
-
-        
-
-        document.getElementById('mobile-reset-btn').addEventListener('click', () => {
-            resetFilterControls();
-            filterAndRender();
-        });
-
-        window.addEventListener('hashchange', () => openCategory(getCategoryFromHash()));
-
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js').catch(err => console.warn('Service worker not registered:', err));
+    function setupChipFilter(id, values) {
+        const select = $(id);
+        select.innerHTML = values.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
+        $(`${id}-chips`).innerHTML = values.map(v => `
+            <button type="button" data-value="${escapeHtml(v)}" class="filter-chip text-sm sm:text-xs px-3.5 py-2 sm:px-2.5 sm:py-1 rounded-full border transition ${CHIP_OFF.join(' ')}">${escapeHtml(v)}</button>
+        `).join('');
+        $(`${id}-chips`).querySelectorAll('.filter-chip').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const opt = Array.from(select.options).find(o => o.value === btn.dataset.value);
+                toggleOption(id, btn.dataset.value, !(opt && opt.selected));
+                rerender();
             });
+        });
+    }
+
+    function initFilters(data) {
+        const uniq = (key) => [...new Set(data.map(item => item[key]))].filter(Boolean).sort();
+        setupChipFilter('filter-country', [...new Set(data.flatMap(countriesOf))].sort());
+        setupChipFilter('filter-location', uniq('Location'));
+        setupChipFilter('filter-season', uniq('Season'));
+        setupChipFilter('filter-ag', uniq('AG'));
+        applyChipSearch();
+    }
+
+    function resetFilterControls() {
+        $('search-input').value = '';
+        $('best-only').checked = false;
+        FILTERS.forEach(f => {
+            Array.from($(f.id).options).forEach(o => o.selected = false);
+            syncChips(f.id);
+            if (f.search) { $(`${f.id}-search`).value = ''; applyChipSearch(f.id); }
+        });
+        currentSortColumn = 'OverallRank';
+        currentSortDirection = 'asc';
+        visibleLimit = PAGE_SIZE;
+    }
+
+    // Summaries in section headers, active-filter pills, badge on the Filters button, sheet button text
+    function updateFilterUi(count) {
+        const pills = [];
+        const search = $('search-input').value.trim();
+        if (search) pills.push({ t: 'search', v: '', l: `"${search}"` });
+
+        FILTERS.forEach(f => {
+            const vals = getSelectedValues($(f.id));
+            const sum = $(`${f.id}-sum`);
+            $(`${f.id}-clear`).classList.toggle('hidden', vals.length === 0);
+            sum.textContent = vals.length === 0 ? 'Showing all' : vals.length === 1 ? vals[0] : `${vals.length} selected`;
+            sum.className = 'text-xs truncate max-w-[9rem] ' + (vals.length ? 'text-yellow-400 font-semibold' : 'text-gray-500');
+            vals.forEach(v => pills.push({ t: f.id, v, l: v }));
+        });
+        if ($('best-only').checked) pills.push({ t: 'best', v: '', l: 'Fastest per athlete' });
+
+        $('active-pills').innerHTML = pills.length
+            ? pills.map(p => `<button type="button" data-t="${escapeHtml(p.t)}" data-v="${escapeHtml(p.v)}" class="flex items-center gap-1.5 bg-gray-800 border border-gray-700 text-gray-100 text-xs font-medium pl-3 pr-2 py-1.5 rounded-full">${escapeHtml(p.l)}<span aria-hidden="true" class="text-gray-400 text-base leading-none">&times;</span><span class="sr-only">remove filter</span></button>`).join('')
+              + `<button type="button" data-t="clear" class="text-xs text-hyrox-500 font-medium px-2 py-1.5">Clear all</button>`
+            : '';
+
+        const badge = $('filter-badge');
+        badge.textContent = pills.length;
+        badge.classList.toggle('hidden', pills.length === 0);
+        $('sheet-apply').textContent = `Show ${count} result${count === 1 ? '' : 's'}`;
+    }
+
+    // ---------------------------------------------------------------
+    // Table
+    // ---------------------------------------------------------------
+    function renderHeader() {
+        const columns = COLUMNS_BY_LAYOUT[currentCategory.layout];
+        $('results-thead').innerHTML = `
+            <tr class="bg-gray-950 text-gray-400 text-[11px] sm:text-xs uppercase tracking-wider border-b border-gray-800 select-none">
+                ${columns.map(col => {
+                    if (!col.sortKey) return `<th class="py-3 px-3 sm:px-4">${escapeHtml(col.label)}</th>`;
+                    const active = col.sortKey === currentSortColumn;
+                    const arrow = active ? (currentSortDirection === 'asc' ? ' ▲' : ' ▼') : '';
+                    return `<th class="py-3 px-3 sm:px-4 cursor-pointer hover:text-white transition sort-header ${active ? 'text-hyrox-500' : ''}" data-column="${col.sortKey}">${escapeHtml(col.label)}<span>${arrow}</span></th>`;
+                }).join('')}
+            </tr>`;
+    }
+
+    function rowHtml(item) {
+        const time = (item.Time || '-').replace(/^=\s*"/, '').replace(/"/g, '');
+        let who;
+        if (currentCategory.layout === 'relay') {
+            who = `<td class="py-3 px-3 sm:px-4 text-xs text-gray-300">${escapeHtml([item.Athlete1, item.Athlete2, item.Athlete3, item.Athlete4].filter(Boolean).join(', '))}</td>
+                   <td class="py-3 px-3 sm:px-4 text-xs text-gray-400">${escapeHtml(item.TeamCountries || '-')}</td>`;
+        } else if (currentCategory.layout === 'doubles') {
+            const c1 = item.Country1 || '', c2 = item.Country2 || '';
+            const countries = (c1 && c2 && c1 !== c2) ? `${c1} / ${c2}` : (c1 || c2 || '-');
+            who = `<td class="py-3 px-3 sm:px-4 text-gray-200">${escapeHtml(item.Athlete1 || '-')}</td>
+                   <td class="py-3 px-3 sm:px-4 text-gray-200">${escapeHtml(item.Athlete2 || '-')}</td>
+                   <td class="py-3 px-3 sm:px-4 text-xs text-gray-400">${escapeHtml(countries)}</td>`;
+        } else {
+            who = `<td class="py-3 px-3 sm:px-4 text-gray-200">${escapeHtml(item.Athlete || '-')}</td>
+                   <td class="py-3 px-3 sm:px-4 text-xs text-gray-400">${escapeHtml(item.Country || '-')}</td>`;
+        }
+        return `
+            <tr class="hover:bg-gray-900/50 transition">
+                <td class="py-3 px-3 sm:px-4 font-semibold text-hyrox-500">${escapeHtml(item.OverallRank || '-')}</td>
+                <td class="py-3 px-3 sm:px-4">${escapeHtml(item.Location || '-')}</td>
+                <td class="py-3 px-3 sm:px-4">${escapeHtml(item.Season || '-')}</td>
+                <td class="py-3 px-3 sm:px-4"><span class="bg-gray-800 text-gray-200 px-2 py-0.5 rounded text-[11px] sm:text-xs font-medium">${escapeHtml(item.AG || '-')}</span></td>
+                <td class="py-3 px-3 sm:px-4 font-mono text-emerald-400">${escapeHtml(time)}</td>
+                ${who}
+            </tr>`;
+    }
+
+    function filterAndRender() {
+        if (!currentCategory) return;
+
+        const searchQuery = $('search-input').value.toLowerCase().trim();
+        const selectedCountries = getSelectedValues($('filter-country'));
+        const selectedLocations = getSelectedValues($('filter-location'));
+        const selectedSeasons = getSelectedValues($('filter-season'));
+        const selectedAgs = getSelectedValues($('filter-ag'));
+        const bestOnly = $('best-only').checked;
+
+        let filtered = currentDataset.filter(item => {
+            const matchSearch = !searchQuery ||
+                athletesOf(item).some(name => name && name.toLowerCase().includes(searchQuery));
+            const matchCountry = selectedCountries.length === 0 ||
+                countriesOf(item).some(c => selectedCountries.includes(c));
+            const matchLoc = selectedLocations.length === 0 || selectedLocations.includes(item.Location);
+            const matchSeason = selectedSeasons.length === 0 || selectedSeasons.includes(item.Season);
+            const matchAg = selectedAgs.length === 0 || selectedAgs.includes(item.AG);
+            return matchSearch && matchCountry && matchLoc && matchSeason && matchAg;
+        });
+
+        if (bestOnly) filtered = keepBestPerAthlete(filtered);
+
+        filtered.sort((a, b) => {
+            let valA = a[currentSortColumn];
+            let valB = b[currentSortColumn];
+            if (currentSortColumn === 'OverallRank') {
+                valA = Number(valA) || 99999;
+                valB = Number(valB) || 99999;
+            } else if (currentSortColumn === 'Time') {
+                valA = timeToSeconds(valA) || 999999;
+                valB = timeToSeconds(valB) || 999999;
+            } else {
+                valA = (valA || '').toString().toLowerCase();
+                valB = (valB || '').toString().toLowerCase();
+            }
+            if (valA < valB) return currentSortDirection === 'asc' ? -1 : 1;
+            if (valA > valB) return currentSortDirection === 'asc' ? 1 : -1;
+            return 0;
+        });
+
+        const count = filtered.length;
+        const shown = Math.min(count, visibleLimit);
+        $('kpi-count').textContent = count;
+        $('table-count').textContent =
+            count > shown ? `Showing ${shown} of ${count} results` : `Showing ${count} results`;
+
+        const timesInSecs = filtered.map(i => timeToSeconds(i.Time)).filter(t => t > 0);
+        if (timesInSecs.length > 0) {
+            $('kpi-fastest').textContent = secondsToTime(Math.min(...timesInSecs));
+            $('kpi-slowest').textContent = secondsToTime(Math.max(...timesInSecs));
+            $('kpi-average').textContent =
+                secondsToTime(Math.round(timesInSecs.reduce((a, b) => a + b, 0) / timesInSecs.length));
+        } else {
+            $('kpi-fastest').textContent = '-';
+            $('kpi-slowest').textContent = '-';
+            $('kpi-average').textContent = '-';
         }
 
-        openCategory(getCategoryFromHash());
-    </script>
-    <script src="install-pwa.js"></script>
-        <script>
-        (function () {
-            const box = document.getElementById('pwaInstallContainer');
-            const isInstalled = () =>
-                window.matchMedia('(display-mode: standalone)').matches ||
-                window.matchMedia('(display-mode: fullscreen)').matches ||
-                window.navigator.standalone === true;
+        updateFilterUi(count);
+        renderHeader();
+        $('results-tbody').innerHTML =
+            filtered.slice(0, visibleLimit).map(rowHtml).join('') ||
+            `<tr><td colspan="${COLUMNS_BY_LAYOUT[currentCategory.layout].length}" class="text-center py-8 text-gray-500">No race results found.</td></tr>`;
+        $('show-more-wrap').classList.toggle('hidden', count <= shown);
+    }
 
-            // Inline style beats the "hidden" class, so install-pwa.js can't unhide it
-            if (isInstalled()) box.style.display = 'none';
-            window.addEventListener('appinstalled', () => { box.style.display = 'none'; });
-        })();
-    </script>
+    // ---------------------------------------------------------------
+    // Events
+    // ---------------------------------------------------------------
+    const rerender = () => { visibleLimit = PAGE_SIZE; filterAndRender(); };
+    const clearAll = () => { resetFilterControls(); filterAndRender(); };
+
+    function setSheet(open) {
+        $('filters-container').classList.toggle('hidden', !open);
+        $('sheet-backdrop').classList.toggle('hidden', !open);
+        document.body.classList.toggle('overflow-hidden', open);
+    }
+
+    $('mobile-filter-toggle').addEventListener('click', () => setSheet(true));
+    $('sheet-close').addEventListener('click', () => setSheet(false));
+    $('sheet-apply').addEventListener('click', () => setSheet(false));
+    $('sheet-backdrop').addEventListener('click', () => setSheet(false));
+    $('sheet-clear').addEventListener('click', clearAll);
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setSheet(false); });
+    matchMedia('(min-width: 640px)').addEventListener('change', () => setSheet(false));
+
+    let searchTimer;
+    $('search-input').addEventListener('input', () => { clearTimeout(searchTimer); searchTimer = setTimeout(rerender, 150); });
+    $('best-only').addEventListener('change', rerender);
+    $('reset-btn').addEventListener('click', clearAll);
+
+    $('active-pills').addEventListener('click', (e) => {
+        const b = e.target.closest('button');
+        if (!b) return;
+        const { t, v } = b.dataset;
+        if (t === 'clear') resetFilterControls();
+        else if (t === 'search') $('search-input').value = '';
+        else if (t === 'best') $('best-only').checked = false;
+        else toggleOption(t, v, false);
+        rerender();
+    });
+
+    $('results-thead').addEventListener('click', (e) => {
+        const th = e.target.closest('.sort-header');
+        if (!th) return;
+        const column = th.getAttribute('data-column');
+        if (currentSortColumn === column) currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+        else { currentSortColumn = column; currentSortDirection = 'asc'; }
+        visibleLimit = PAGE_SIZE;
+        filterAndRender();
+    });
+
+    $('show-more-btn').addEventListener('click', () => {
+        visibleLimit += PAGE_SIZE;
+        filterAndRender();
+    });
+
+    window.addEventListener('hashchange', () => openCategory(getCategoryFromHash()));
+
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('sw.js').catch(err => console.warn('Service worker not registered:', err));
+        });
+    }
+
+    buildFilterSections();
+    openCategory(getCategoryFromHash());
+</script>
+<script src="install-pwa.js"></script>
+<script>
+    (function () {
+        const box = document.getElementById('pwaInstallContainer');
+        const isInstalled = () =>
+            window.matchMedia('(display-mode: standalone)').matches ||
+            window.matchMedia('(display-mode: fullscreen)').matches ||
+            window.navigator.standalone === true;
+
+        // Inline style beats the "hidden" class, so install-pwa.js can't unhide it
+        if (isInstalled()) box.style.display = 'none';
+        window.addEventListener('appinstalled', () => { box.style.display = 'none'; });
+    })();
+</script>
 </body>
 </html>
