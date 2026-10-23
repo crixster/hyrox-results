@@ -45,14 +45,16 @@
             </button>
         </div>
     </div>
-<div id="pwaInstallContainer" class="hidden mt-3 flex justify-center">
-  <button
-    id="pwaInstallBtn"
-    class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-md transition"
-  >
-    📲 Install App
-  </button>
-</div>
+        <div class="flex items-center gap-3">
+            <div id="pwaInstallContainer" class="hidden">
+                <button id="pwaInstallBtn" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium rounded-lg border border-emerald-700 transition whitespace-nowrap">
+                    📲 Install App
+                </button>
+            </div>
+            <button id="reset-btn" class="hidden sm:inline-block bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm font-medium px-4 py-2 rounded-lg border border-gray-700 transition">
+                Reset Filters
+            </button>
+        </div>
     
     <!-- Category pages (built by JS) -->
     <nav id="category-nav" class="max-w-7xl mx-auto px-4 py-2 flex gap-2 overflow-x-auto scrollbar-none" aria-label="Categories"></nav>
@@ -621,5 +623,18 @@ function initFilters(data) {
         openCategory(getCategoryFromHash());
     </script>
     <script src="install-pwa.js"></script>
+        <script>
+        (function () {
+            const box = document.getElementById('pwaInstallContainer');
+            const isInstalled = () =>
+                window.matchMedia('(display-mode: standalone)').matches ||
+                window.matchMedia('(display-mode: fullscreen)').matches ||
+                window.navigator.standalone === true;
+
+            // Inline style beats the "hidden" class, so install-pwa.js can't unhide it
+            if (isInstalled()) box.style.display = 'none';
+            window.addEventListener('appinstalled', () => { box.style.display = 'none'; });
+        })();
+    </script>
 </body>
 </html>
